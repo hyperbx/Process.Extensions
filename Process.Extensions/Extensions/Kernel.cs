@@ -1,4 +1,5 @@
 ﻿using ProcessExtensions.Helpers;
+﻿using ProcessExtensions.Exceptions;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -50,7 +51,7 @@ namespace ProcessExtensions
                 var exportNames = in_process.Read<uint>((nint)(module.BaseAddress + exportDir.AddressOfNames), (int)exportDir.NumberOfNames);
 
                 if (exportNames == null || exportNames.Length <= 0)
-                    throw new Win32Exception("Failed to read export table.");
+                    throw new VerboseWin32Exception("Failed to read export table.");
 
                 for (int i = 0; i < exportNames.Length; i++)
                 {
@@ -92,7 +93,7 @@ namespace ProcessExtensions
         /// <param name="in_process">The target process to duplicate the handle into.</param>
         /// <param name="in_handle">The handle to duplicate.</param>
         /// <returns>The value of the handle in the target process.</returns>
-        /// <exception cref="Win32Exception"/>
+        /// <exception cref="VerboseWin32Exception"/>
         public static nint InheritHandle(this Process in_process, nint in_handle)
         {
             if (!Kernel32.DuplicateHandle(Kernel32.GetCurrentProcess(), in_handle, in_process.Handle, out var out_handle, 0, false, Kernel32.DUPLICATE_HANDLE_OPTIONS.DUPLICATE_SAME_ACCESS))
@@ -106,11 +107,11 @@ namespace ProcessExtensions
         /// </summary>
         /// <param name="in_process">The target process to check.</param>
         /// <returns><c>true</c> if the target process is 64-bit; otherwise, <c>false</c>.</returns>
-        /// <exception cref="Win32Exception"></exception>
+        /// <exception cref="VerboseWin32Exception"/>
         public static bool Is64Bit(this Process in_process)
         {
             if (!Kernel32.IsWow64Process(in_process.Handle, out var isWoW64))
-                throw new Win32Exception(Marshal.GetLastWin32Error());
+                throw new VerboseWin32Exception($"Failed to determine process architecture.");
 
             return !isWoW64;
         }

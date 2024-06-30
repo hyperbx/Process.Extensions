@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+﻿using ProcessExtensions.Exceptions;
 using System.Runtime.InteropServices;
 using Vanara.PInvoke;
 
@@ -13,14 +13,14 @@ namespace ProcessExtensions.Interop
         public SymbolResolver(string in_modulePath)
         {
             if (!DbgHelp.SymInitialize(_self, null, false))
-                throw new Win32Exception($"Failed to initialise symbol resolver ({Marshal.GetLastWin32Error()}).");
+                throw new VerboseWin32Exception($"Failed to initialise symbol resolver.");
 
             DbgHelp.SymSetOptions(DbgHelp.SymGetOptions() | DbgHelp.SYMOPT.SYMOPT_LOAD_LINES | DbgHelp.SYMOPT.SYMOPT_UNDNAME);
 
             var moduleBase = DbgHelp.SymLoadModuleEx(_self, IntPtr.Zero, in_modulePath, null, 0, 0, 0, 0);
 
             if (moduleBase == 0)
-                throw new Win32Exception($"Failed to load module ({Marshal.GetLastWin32Error()}).");
+                throw new VerboseWin32Exception($"Failed to load module.");
         }
 
         public nint GetProcedureAddress(string in_procedureName)
@@ -37,7 +37,7 @@ namespace ProcessExtensions.Interop
             }
             else
             {
-                throw new Win32Exception($"Failed to resolve symbol \"{in_procedureName}\" ({Marshal.GetLastWin32Error()}).");
+                throw new VerboseWin32Exception($"Failed to resolve symbol \"{in_procedureName}\".");
             }
         }
 

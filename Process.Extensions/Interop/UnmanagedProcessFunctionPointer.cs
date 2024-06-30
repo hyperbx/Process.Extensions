@@ -1,8 +1,8 @@
 ﻿using ProcessExtensions.Enums;
+using ProcessExtensions.Exceptions;
 using ProcessExtensions.Logger;
 using ProcessExtensions.Interop.Context;
 using ProcessExtensions.Interop.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Vanara.PInvoke;
@@ -116,7 +116,7 @@ namespace ProcessExtensions.Interop
                 _eventHandle = Kernel32.CreateEvent(null, true, false, null);
 
                 if (_eventHandle == 0)
-                    throw new Win32Exception($"Failed to create event ({Marshal.GetLastWin32Error()}).");
+                    throw new VerboseWin32Exception($"Failed to create event.");
 
                 if (!Process.Is64Bit())
                     _isWoW64ThreadFinishedAddr = Process.Alloc(1);
@@ -127,7 +127,7 @@ namespace ProcessExtensions.Interop
             var threadHandle = Kernel32.CreateRemoteThread(Process.Handle, null, 0, Address, 0, Kernel32.CREATE_THREAD_FLAGS.CREATE_SUSPENDED, out _);
 
             if (threadHandle == 0)
-                throw new Win32Exception($"Failed to create remote thread ({Marshal.GetLastWin32Error()}).");
+                throw new VerboseWin32Exception($"Failed to create remote thread.");
 
             if (Process.Is64Bit())
                 Process.Write(_threadHandleAddr, Process.InheritHandle(threadHandle.DangerousGetHandle()));
@@ -254,7 +254,7 @@ namespace ProcessExtensions.Interop
         /// <exception cref="AggregateException"/>
         /// <exception cref="ArgumentException"/>
         /// <exception cref="InvalidCastException"/>
-        /// <exception cref="Win32Exception"/>
+        /// <exception cref="VerboseWin32Exception"/>
         public virtual T Invoke(params object[] in_args)
         {
             if (Process == null)

@@ -1,6 +1,6 @@
 ﻿using ProcessExtensions.Extensions.Internal;
 using ProcessExtensions.Helpers;
-using System.ComponentModel;
+﻿using ProcessExtensions.Exceptions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Vanara.PInvoke;
@@ -21,7 +21,7 @@ namespace ProcessExtensions.Interop.Context
             else
             {
                 var context = Kernel32Helper.GetThreadContext(_threadHandle)
-                    ?? throw new Win32Exception($"Failed to get thread context ({Marshal.GetLastWin32Error()}).");
+                    ?? throw new VerboseWin32Exception($"Failed to get thread context.");
 
                 context.Eip = (uint)in_ip;
 

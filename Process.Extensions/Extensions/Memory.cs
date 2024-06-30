@@ -1,4 +1,5 @@
 ﻿using ProcessExtensions.Helpers;
+﻿using ProcessExtensions.Exceptions;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -47,13 +48,13 @@ namespace ProcessExtensions
         /// <param name="in_process">The target process to allocate memory in.</param>
         /// <param name="in_size">The amount of memory to allocate.</param>
         /// <returns>A pointer in the target process' memory to the allocated memory.</returns>
-        /// <exception cref="Win32Exception"/>
+        /// <exception cref="VerboseWin32Exception"/>
         public static nint Alloc(this Process in_process, int in_size)
         {
             var result = Kernel32.VirtualAllocEx(in_process.Handle, 0, in_size, Kernel32.MEM_ALLOCATION_TYPE.MEM_COMMIT, Kernel32.MEM_PROTECTION.PAGE_EXECUTE_READWRITE);
 
             if (result == 0)
-                throw new Win32Exception($"Memory allocation failed ({Marshal.GetLastWin32Error()}).");
+                throw new VerboseWin32Exception($"Memory allocation failed.");
 
             return result;
         }
@@ -66,7 +67,7 @@ namespace ProcessExtensions
         /// <param name="in_name">The name of this allocation.</param>
         /// <param name="in_size">The amount of memory to allocate.</param>
         /// <returns>A pointer in the target process' memory to the allocated memory.</returns>
-        /// <exception cref="Win32Exception"/>
+        /// <exception cref="VerboseWin32Exception"/>
         public static nint Alloc(this Process in_process, string in_name, int in_size)
         {
             if (_staticAllocations.TryGetValue(in_name, out var out_result))
@@ -84,7 +85,7 @@ namespace ProcessExtensions
         /// </summary>
         /// <param name="in_process">The target process to free memory in.</param>
         /// <param name="in_address">The address of the allocated memory to free.</param>
-        /// <exception cref="Win32Exception"/>
+        /// <exception cref="VerboseWin32Exception"/>
         public static void Free(this Process in_process, nint in_address)
         {
             if (in_address == 0)
@@ -93,7 +94,7 @@ namespace ProcessExtensions
             var result = Kernel32.VirtualFreeEx(in_process.Handle, in_address, 0, Kernel32.MEM_ALLOCATION_TYPE.MEM_RELEASE);
 
             if (!result)
-                throw new Win32Exception($"Memory release failed ({Marshal.GetLastWin32Error()}).");
+                throw new VerboseWin32Exception($"Memory release failed.");
 
             for (int i = 0; i < _staticAllocations.Count; i++)
             {
@@ -110,7 +111,7 @@ namespace ProcessExtensions
         /// </summary>
         /// <param name="in_process">The target process to free memory in.</param>
         /// <param name="in_name">The name of the allocated memory to free.</param>
-        /// <exception cref="Win32Exception"/>
+        /// <exception cref="VerboseWin32Exception"/>
         public static void Free(this Process in_process, string in_name)
         {
             if (!_staticAllocations.TryGetValue(in_name, out var out_result))
@@ -127,23 +128,23 @@ namespace ProcessExtensions
         /// <param name="in_process">The target process the thread is associated with.</param>
         /// <param name="in_thread">The thread to get the pointer to local storage from.</param>
         /// <returns>A pointer in the target process' memory to the thread's local storage.</returns>
-        /// <exception cref="Win32Exception"/>
+        /// <exception cref="VerboseWin32Exception"/>
         public static nint GetThreadLocalStoragePointer(this Process in_process, ProcessThread in_thread)
         {
             var handle = Kernel32.OpenThread((int)Kernel32.ThreadAccess.THREAD_ALL_ACCESS, false, (uint)in_thread.Id);
 
             if (handle == 0)
-                throw new Win32Exception($"Failed to open thread {in_thread.Id} ({Marshal.GetLastWin32Error()}).");
+                throw new VerboseWin32Exception($"Failed to open thread {in_thread.Id}.");
 
             var threadInfo = NtDllHelper.GetThreadInformation(handle);
 
             handle.Close();
 
             if (threadInfo == null)
-                throw new Win32Exception($"Failed to get information about thread {in_thread.Id} ({Marshal.GetLastWin32Error()}).");
+                throw new VerboseWin32Exception($"Failed to get information about thread {in_thread.Id}.");
 
             if (threadInfo.TebBaseAddress == 0)
-                throw new Win32Exception($"Invalid environment block in thread {in_thread.Id} ({Marshal.GetLastWin32Error()}).");
+                throw new VerboseWin32Exception($"Invalid environment block in thread {in_thread.Id}.");
 
             return in_process.Read<nint>(in_process.Read<nint>(threadInfo.TebBaseAddress + 0x58));
         }
@@ -169,7 +170,7 @@ namespace ProcessExtensions
         /// <param name="in_address">The remote address to read from.</param>
         /// <param name="in_length">The amount of bytes to read.</param>
         /// <returns>A byte array containing the requested memory.</returns>
-        /// <exception cref="Win32Exception"/>
+        /// <exception cref="VerboseWin32Exception"/>
         public static unsafe byte[] ReadBytes(this Process in_process, nint in_address, int in_length)
         {
             var result = new byte[in_length];
@@ -180,7 +181,7 @@ namespace ProcessExtensions
             fixed (byte* pBuffer = result)
             {
                 if (!Kernel32.ReadProcessMemory(in_process.Handle, in_address, (nint)pBuffer, in_length, out _))
-                    throw new Win32Exception($"Failed to read memory at 0x{in_address:X} in process {in_process.Id} ({Marshal.GetLastWin32Error()}).");
+                    throw new VerboseWin32Exception($"Failed to read memory at 0x{in_address:X} in process {in_process.Id}.");
             }
 
             return result;
@@ -276,7 +277,7 @@ namespace ProcessExtensions
         ///     <para>Please verify the page protection of <paramref name="in_address"/> using an external debugger.</para>
         /// </param>
         /// <param name="in_isPreserved">Determines whether the original code will be preserved so it can be restored using <see cref="MemoryPreserver.RestoreMemory(Process, nint)"/> later.</param>
-        /// <exception cref="Win32Exception"/>
+        /// <exception cref="VerboseWin32Exception"/>
         public static void WriteBytes(this Process in_process, nint in_address, byte[] in_data, bool in_isProtected = false, bool in_isPreserved = false)
         {
             var oldProtect = Kernel32.MEM_PROTECTION.PAGE_NOACCESS;
@@ -288,7 +289,7 @@ namespace ProcessExtensions
                 Kernel32.VirtualProtectEx(in_process.Handle, in_address, in_data.Length, Kernel32.MEM_PROTECTION.PAGE_EXECUTE_READWRITE, out oldProtect);
 
             if (!Kernel32.WriteProcessMemory(in_process.Handle, in_address, in_data, (uint)in_data.Length, out _))
-                throw new Win32Exception($"Failed to write memory at 0x{in_address:X} in process {in_process.Id} ({Marshal.GetLastWin32Error()}).");
+                throw new VerboseWin32Exception($"Failed to write memory at 0x{in_address:X} in process {in_process.Id}.");
 
             if (in_isProtected)
                 Kernel32.VirtualProtectEx(in_process.Handle, in_address, in_data.Length, oldProtect, out _);
@@ -300,7 +301,7 @@ namespace ProcessExtensions
         /// <param name="in_process">The target process to write to.</param>
         /// <param name="in_data">The buffer to write.</param>
         /// <returns>A pointer in the target process' memory to the buffer.</returns>
-        /// <exception cref="Win32Exception"/>
+        /// <exception cref="VerboseWin32Exception"/>
         public static nint WriteBytes(this Process in_process, byte[] in_data)
         {
             var addr = in_process.Alloc(in_data.Length);
@@ -317,7 +318,7 @@ namespace ProcessExtensions
         /// <param name="in_address">The remote address to write to.</param>
         /// <param name="in_data">The buffer to write.</param>
         /// <param name="in_isPreserved">Determines whether the original code will be preserved so it can be restored using <see cref="MemoryPreserver.RestoreMemory(Process, nint)"/> later.</param>
-        /// <exception cref="Win32Exception"/>
+        /// <exception cref="VerboseWin32Exception"/>
         public static void WriteProtectedBytes(this Process in_process, nint in_address, byte[] in_data, bool in_isPreserved = false)
         {
             in_process.WriteBytes(in_address, in_data, true, in_isPreserved);
@@ -337,7 +338,7 @@ namespace ProcessExtensions
         ///     <para>Please verify the page protection of <paramref name="in_address"/> using an external debugger.</para>
         /// </param>
         /// <param name="in_isPreserved">Determines whether the original code will be preserved so it can be restored using <see cref="MemoryPreserver.RestoreMemory(Process, nint)"/> later.</param>
-        /// <exception cref="Win32Exception"/>
+        /// <exception cref="VerboseWin32Exception"/>
         public static void Write(this Process in_process, nint in_address, object in_data, Type in_type, bool in_isProtected = false, bool in_isPreserved = false)
         {
             var data = MemoryHelper.UnmanagedTypeToByteArray(in_data, in_type);
@@ -369,7 +370,7 @@ namespace ProcessExtensions
         ///     <para>Please verify the page protection of <paramref name="in_address"/> using an external debugger.</para>
         /// </param>
         /// <param name="in_isPreserved">Determines whether the original code will be preserved so it can be restored using <see cref="MemoryPreserver.RestoreMemory(Process, nint)"/> later.</param>
-        /// <exception cref="Win32Exception"/>
+        /// <exception cref="VerboseWin32Exception"/>
         public static void Write<T>(this Process in_process, nint in_address, T in_data, bool in_isProtected = false, bool in_isPreserved = false) where T : unmanaged
         {
             in_process.Write(in_address, in_data, in_data.GetType(), in_isProtected, in_isPreserved);
@@ -382,7 +383,7 @@ namespace ProcessExtensions
         /// <param name="in_data">The unmanaged value to write.</param>
         /// <param name="in_type">The unmanaged type to write.</param>
         /// <returns>A pointer in the target process' memory to the value.</returns>
-        /// <exception cref="Win32Exception"/>
+        /// <exception cref="VerboseWin32Exception"/>
         public static nint Write(this Process in_process, object in_data, Type in_type)
         {
             return in_process.WriteBytes(MemoryHelper.UnmanagedTypeToByteArray(in_data, in_type));
@@ -395,7 +396,7 @@ namespace ProcessExtensions
         /// <param name="in_process">The target process to write to.</param>
         /// <param name="in_data">The unmanaged value to write.</param>
         /// <returns>A pointer in the target process' memory to the value.</returns>
-        /// <exception cref="Win32Exception"/>
+        /// <exception cref="VerboseWin32Exception"/>
         public static nint Write<T>(this Process in_process, T in_data) where T : unmanaged
         {
             return in_process.Write(in_data, in_data.GetType());
@@ -408,7 +409,7 @@ namespace ProcessExtensions
         /// <param name="in_address">The remote address to write to.</param>
         /// <param name="in_data">The buffer to write.</param>
         /// <param name="in_isPreserved">Determines whether the original code will be preserved so it can be restored using <see cref="MemoryPreserver.RestoreMemory(Process, nint)"/> later.</param>
-        /// <exception cref="Win32Exception"/>
+        /// <exception cref="VerboseWin32Exception"/>
         public static void WriteProtected<T>(this Process in_process, nint in_address, T in_data, bool in_isPreserved = false) where T : unmanaged
         {
             in_process.Write(in_address, in_data, true, in_isPreserved);

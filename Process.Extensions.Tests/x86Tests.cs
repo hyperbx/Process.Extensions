@@ -32,9 +32,10 @@ namespace ProcessExtensions
                 LoggerService.Warning("Initialising Tests (x86) ------\n");
 
                 TestBase[] tests = [];
-
+#if !DEBUG
                 try
                 {
+#endif
                     tests =
                     [
                         new CdeclTests(process, sr),
@@ -42,9 +43,10 @@ namespace ProcessExtensions
                         new FastCallTests(process, sr),
                         new ThisCallTests(process, sr),
                         new AsmHookTest(process, sr),
+                        // new ModuleInjectTest(process),
                         new SignalExitTest(process, sr)
                     ];
-
+#if !DEBUG
                     LoggerService.Utility("PASS\n");
                 }
                 catch (Exception out_ex)
@@ -54,6 +56,7 @@ namespace ProcessExtensions
                     LoggerService.Error("FAIL\n");
                     goto Abort;
                 }
+#endif
 
                 foreach (var test in tests)
                 {

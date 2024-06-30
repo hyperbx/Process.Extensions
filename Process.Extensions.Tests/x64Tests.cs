@@ -32,16 +32,17 @@ namespace ProcessExtensions
                 LoggerService.Warning("Initialising Tests (x64) ------\n");
 
                 TestBase[] tests = [];
-
+#if !DEBUG
                 try
                 {
+#endif
                     tests =
                     [
                         new FastCallTests(process, sr),
                         new AsmHookTest(process, sr),
                         new SignalExitTest(process, sr)
                     ];
-
+#if !DEBUG
                     LoggerService.Utility("PASS\n");
                 }
                 catch (Exception out_ex)
@@ -51,7 +52,7 @@ namespace ProcessExtensions
                     LoggerService.Error("FAIL\n");
                     goto Abort;
                 }
-
+#endif
                 foreach (var test in tests)
                 {
                     if (!test.RunTests())

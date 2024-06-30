@@ -1,4 +1,7 @@
-﻿using System.Diagnostics;
+﻿using ProcessExtensions.Extensions.Internal;
+using ProcessExtensions.Helpers.Internal;
+using ProcessExtensions.Interop.Generic;
+using System.Diagnostics;
 using Vanara.PInvoke;
 
 namespace ProcessExtensions.Interop.Context
@@ -11,26 +14,51 @@ namespace ProcessExtensions.Interop.Context
 
         protected List<nint> _allocations = [];
 
-        protected List<int> _stringIndices = [];
+        protected List<int> _nonPrimitiveIndices = [];
 
         public virtual void Set(nint in_ip, bool in_isVariadicArgs = false, params object[] in_args)
         {
-            _stringIndices.Clear();
+            _nonPrimitiveIndices.Clear();
 
             for (int i = 0; i < in_args.Length; i++)
             {
                 var arg = in_args[i];
+                var argType = arg.GetType();
 
-                // Replace string literal with pointer to string in process memory.
-                if (arg.GetType().Equals(typeof(string)))
+                /* Replace non-primitive types with a pointer to
+                   themselves in the target process' memory. */
+                if (argType.Equals(typeof(UnmanagedPointer)))
                 {
-                    var strAlloc = _process.WriteStringNullTerminated((string)arg);
+                    in_args[i] = ((UnmanagedPointer)arg).pData;
+                }
+                else if (argType.IsStruct())
+                {
+                    in_args[i] = _process.WriteBytes(MemoryHelper.UnmanagedTypeToByteArray(arg, argType));
 
-                    _allocations.Add(strAlloc);
+                    _allocations.Add((nint)in_args[i]);
+                    _nonPrimitiveIndices.Add(i);
+                }
+                else if (argType.Equals(typeof(string)))
+                {
+                    in_args[i] = _process.WriteStringNullTerminated((string)arg);
 
-                    in_args[i] = strAlloc;
+                    _allocations.Add((nint)in_args[i]);
+                    _nonPrimitiveIndices.Add(i);
+                }
 
-                    _stringIndices.Add(i);
+                // Transform pointer into correct width.
+                if (in_args[i].GetType().Equals(typeof(nint)))
+                {
+                    var ptr64 = ((nint)in_args[i]).ToInt64();
+
+                    if (_process.Is64Bit())
+                    {
+                        in_args[i] = (ulong)Convert.ToUInt64(ptr64);
+                    }
+                    else
+                    {
+                        in_args[i] = (uint)Convert.ToUInt32(ptr64);
+                    }
                 }
             }
         }
@@ -41,7 +69,7 @@ namespace ProcessExtensions.Interop.Context
                 _process.Free(addr);
 
             _allocations.Clear();
-            _stringIndices.Clear();
+            _nonPrimitiveIndices.Clear();
         }
     }
 }

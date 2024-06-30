@@ -27,12 +27,6 @@ namespace ProcessExtensions.Interop.Context
                 for (int i = in_args.Length - 1; i >= 0; i--)
                 {
                     var arg = in_args[i];
-                    var argType = arg.GetType();
-
-                    // Truncate pointer to 32-bit width.
-                    if (argType.Equals(typeof(nint)))
-                        arg = Convert.ToUInt32(((nint)arg).ToInt64());
-
                     var buffer = MemoryHelper.UnmanagedTypeToByteArray(arg, arg.GetType());
 
                     context.Esp -= (uint)buffer.Length.Align(4);

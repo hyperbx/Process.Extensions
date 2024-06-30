@@ -30,7 +30,7 @@ namespace ProcessExtensions.Interop.Context
                     var arg = in_args[i];
                     var argType = arg.GetType();
 
-                    if (i < 4 && !argType.IsStruct())
+                    if (i < 4 && !_nonPrimitiveIndices.Contains(i))
                     {
                         if (argType.Equals(typeof(float)))
                         {
@@ -80,15 +80,10 @@ namespace ProcessExtensions.Interop.Context
                     var arg = in_args[i];
                     var argType = arg.GetType();
 
-                    // Truncate pointer to 32-bit width.
-                    if (argType.Equals(typeof(nint)))
-                        arg = Convert.ToUInt32(((nint)arg).ToInt64());
-
                     var isFloat = argType.Equals(typeof(float)) || argType.Equals(typeof(double));
-                    var isString = _stringIndices.Contains(i);
-                    var isStruct = argType.IsStruct();
+                    var isPrimitive = !_nonPrimitiveIndices.Contains(i);
 
-                    if (i < 2 && !in_isVariadicArgs && !isFloat && !isString && !isStruct)
+                    if (i < 2 && !in_isVariadicArgs && !isFloat && isPrimitive)
                     {
                         var val = MemoryHelper.UnmanagedTypeToRegisterValue<uint>(arg, argType);
 

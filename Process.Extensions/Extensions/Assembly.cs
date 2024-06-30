@@ -23,6 +23,9 @@ namespace ProcessExtensions
         /// <returns>A byte array containing x86-64 bytecode.</returns>
         public static byte[] Assemble(this Process in_process, string in_code, nint in_address = 0)
         {
+            if (in_process.HasExited)
+                return [];
+
             in_code = RemoveComments(in_code);
 
             using (var assembler = new Engine(Keystone.Architecture.X86, in_process.Is64Bit() ? Mode.X64 : Mode.X32) { ThrowOnError = true })
@@ -36,6 +39,9 @@ namespace ProcessExtensions
         /// <param name="in_code">The bytecode to disassemble.</param>
         public static X86Instruction[] Disassemble(this Process in_process, byte[] in_code)
         {
+            if (in_process.HasExited)
+                return [];
+
             using (var disassembler = new CapstoneX86Disassembler(X86DisassembleMode.LittleEndian | (in_process.Is64Bit() ? X86DisassembleMode.Bit64 : X86DisassembleMode.Bit32)))
                 return disassembler.Disassemble(in_code);
         }
@@ -59,7 +65,7 @@ namespace ProcessExtensions
         /// <returns>A pointer to the subroutine being called.</returns>
         public static nint ReadCall(this Process in_process, nint in_address)
         {
-            if (in_address == 0)
+            if (in_process.HasExited || in_address == 0)
                 return 0;
 
             return in_address + in_process.Read<int>(in_address + 0x01) + 0x05;
@@ -73,7 +79,7 @@ namespace ProcessExtensions
         /// <returns>A pointer to the address being referenced.</returns>
         public static nint ReadEffectiveAddress(this Process in_process, nint in_address)
         {
-            if (in_address == 0)
+            if (in_process.HasExited || in_address == 0)
                 return 0;
 
             return in_address + in_process.Read<int>(in_address + 0x03) + 0x07;
@@ -89,7 +95,7 @@ namespace ProcessExtensions
         {
             EJumpType result = EJumpType.Unknown;
 
-            if (in_address == 0)
+            if (in_process.HasExited || in_address == 0)
                 return result;
 
             var opcode = in_process.Read<byte>(in_address);
@@ -133,7 +139,7 @@ namespace ProcessExtensions
         /// <returns></returns>
         public static nint ReadJump(this Process in_process, nint in_address)
         {
-            if (in_address == 0)
+            if (in_process.HasExited || in_address == 0)
                 return 0;
 
             switch (in_process.ReadJumpOpcode(in_address))
@@ -179,7 +185,7 @@ namespace ProcessExtensions
         /// <param name="in_isPreserved">Determines whether the original code will be preserved so it can be restored using <see cref="MemoryPreserver.RestoreMemory(Process, nint)"/> later.</param>
         public static void WriteAsmHook(this Process in_process, string in_code, nint in_address, EHookParameter in_parameter = EHookParameter.Jump, bool in_isPreserved = true)
         {
-            if (string.IsNullOrEmpty(in_code) || in_address == 0)
+            if (in_process.HasExited || string.IsNullOrEmpty(in_code) || in_address == 0)
                 return;
 
             // Restore preserved memory before hooking again.
@@ -305,7 +311,7 @@ namespace ProcessExtensions
         /// <param name="in_address">The remote address of the conditional jump to replace.</param>
         public static void WriteForceJump(this Process in_process, nint in_address)
         {
-            if (in_address == 0)
+            if (in_process.HasExited || in_address == 0)
                 return;
 
             switch (in_process.ReadJumpOpcode(in_address))
@@ -330,6 +336,11 @@ namespace ProcessExtensions
         /// <param name="in_isPreserved">Determines whether the original code will be preserved so it can be restored using <see cref="MemoryPreserver.RestoreMemory(Process, nint)"/> later.</param>
         public static void WriteNop(this Process in_process, nint in_address, int in_count = 1, bool in_isPreserved = true)
         {
+            if (in_process.HasExited || in_address == 0)
+                return;
+
+            ArgumentOutOfRangeException.ThrowIfLessThan(in_count, 1);
+
             if (in_isPreserved)
                 in_process.PreserveMemory(in_address, in_count);
 
@@ -361,6 +372,9 @@ namespace ProcessExtensions
         /// <param name="in_baseRegister">The base register to expand (or shrink) to full width.</param>
         public static ERegister GetFullWidthRegister(this Process in_process, EBaseRegister in_baseRegister)
         {
+            if (in_process.HasExited)
+                return ERegister.RAX;
+
             return in_process.GetRegisterBySize(in_baseRegister, in_process.Is64Bit() ? 8 : 4);
         }
 
@@ -391,6 +405,9 @@ namespace ProcessExtensions
         /// <param name="in_size">The size of the object being fit into the register</param>
         public static ERegister GetRegisterBySize(this Process in_process, EBaseRegister in_baseRegister, int in_size)
         {
+            if (in_process.HasExited)
+                return ERegister.RAX;
+
             var is64Bit = in_process.Is64Bit();
 
             if (in_size > 4)
@@ -442,6 +459,9 @@ namespace ProcessExtensions
         /// <returns><see cref="ERegister.XMM0"/> if <typeparamref name="T"/> is a <see cref="float"/> or <see cref="double"/>; otherwise, returns <see cref="ERegister.RAX"/>.</returns>
         public static ERegister GetReturnRegisterByType<T>(this Process in_process) where T : unmanaged
         {
+            if (in_process.HasExited)
+                return ERegister.RAX;
+
             if (typeof(T).Equals(typeof(float)) || typeof(T).Equals(typeof(double)))
                 return ERegister.XMM0;
 

@@ -15,8 +15,10 @@ namespace ProcessExtensions
         /// <param name="in_isPreservedOnce">Determines whether the memory should be preserved once (meaning further calls to preserve memory at <paramref name="in_address"/> will be ignored).</param>
         public static void PreserveMemory(this Process in_process, nint in_address, int in_length, bool in_isPreservedOnce = true)
         {
-            if (in_address == 0)
+            if (in_process.HasExited || in_address == 0)
                 return;
+
+            ArgumentOutOfRangeException.ThrowIfLessThan(in_length, 1);
 
             if (_preservedMemory.ContainsKey(in_address))
             {
@@ -37,7 +39,7 @@ namespace ProcessExtensions
         /// <param name="in_isDeleteOnWrite">Determines whether the preserved memory should be deleted once restored.</param>
         public static void RestoreMemory(this Process in_process, nint in_address, bool in_isDeleteOnWrite = false)
         {
-            if (in_address == 0)
+            if (in_process.HasExited || in_address == 0)
                 return;
 
             if (!_preservedMemory.ContainsKey(in_address))

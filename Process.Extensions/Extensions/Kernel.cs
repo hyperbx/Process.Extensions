@@ -20,6 +20,12 @@ namespace ProcessExtensions
         /// <exception cref="IndexOutOfRangeException"/>
         public static unsafe nint GetProcedureAddress(this Process in_process, string in_moduleName, string in_procedureName)
         {
+            if (in_process.HasExited)
+                return 0;
+
+            ArgumentException.ThrowIfNullOrEmpty(in_moduleName);
+            ArgumentException.ThrowIfNullOrEmpty(in_procedureName);
+
             in_moduleName = in_moduleName.ToLower();
 
             foreach (ProcessModule module in in_process.Modules)
@@ -94,6 +100,9 @@ namespace ProcessExtensions
         /// <exception cref="VerboseWin32Exception"/>
         public static nint InheritHandle(this Process in_process, nint in_handle)
         {
+            if (in_process.HasExited)
+                return 0;
+
             if (!Kernel32.DuplicateHandle(Kernel32.GetCurrentProcess(), in_handle, in_process.Handle, out var out_handle, 0, false, Kernel32.DUPLICATE_HANDLE_OPTIONS.DUPLICATE_SAME_ACCESS))
                 throw new Win32Exception($"Failed to duplicate handle ({Marshal.GetLastWin32Error()}).");
 
@@ -108,6 +117,9 @@ namespace ProcessExtensions
         /// <exception cref="VerboseWin32Exception"/>
         public static bool Is64Bit(this Process in_process)
         {
+            if (in_process.HasExited)
+                return false;
+
             if (!Kernel32.IsWow64Process(in_process.Handle, out var isWoW64))
                 throw new VerboseWin32Exception($"Failed to determine process architecture.");
 

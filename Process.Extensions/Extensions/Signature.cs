@@ -53,7 +53,7 @@ namespace ProcessExtensions
         /// <returns>A pointer to the specified pattern in the target process' memory, if found; otherwise, returns zero.</returns>
         public static nint ScanSignature(this Process in_process, string in_pattern, string in_mask, nint in_startAddress = 0)
         {
-            if (in_process.MainModule == null)
+            if (in_process.HasExited || in_process.MainModule == null)
                 return 0;
 
             var result = in_process.ScanSignature(in_pattern, in_mask, in_startAddress, in_process.MainModule.BaseAddress + in_process.MainModule.ModuleMemorySize);

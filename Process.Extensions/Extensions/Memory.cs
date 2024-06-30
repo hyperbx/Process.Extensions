@@ -1,5 +1,6 @@
 ﻿using ProcessExtensions.Exceptions;
 using ProcessExtensions.Helpers.Internal;
+using ProcessExtensions.Logger;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -22,7 +23,7 @@ namespace ProcessExtensions
         /// <param name="in_address">The address to transform.</param>
         public static nint ToASLR(this Process in_process, long in_address)
         {
-            if (in_process.MainModule == null)
+            if (in_process.HasExited || in_process.MainModule == null)
                 return 0;
 
             return (nint)(in_process.MainModule.BaseAddress + (in_address - (in_process.Is64Bit() ? 0x140000000 : 0x400000)));
@@ -36,7 +37,7 @@ namespace ProcessExtensions
         /// <param name="in_address">The address to transform.</param>
         public static nint FromASLR(this Process in_process, long in_address)
         {
-            if (in_process.MainModule == null)
+            if (in_process.HasExited || in_process.MainModule == null)
                 return 0;
 
             return (nint)(in_address + (in_process.Is64Bit() ? 0x140000000 : 0x400000) - in_process.MainModule.BaseAddress);
@@ -51,11 +52,16 @@ namespace ProcessExtensions
         /// <exception cref="VerboseWin32Exception"/>
         public static nint Alloc(this Process in_process, int in_size)
         {
+            if (in_process.HasExited)
+                return 0;
+
             var result = Kernel32.VirtualAllocEx(in_process.Handle, 0, in_size, Kernel32.MEM_ALLOCATION_TYPE.MEM_COMMIT, Kernel32.MEM_PROTECTION.PAGE_EXECUTE_READWRITE);
 
             if (result == 0)
                 throw new VerboseWin32Exception($"Memory allocation failed.");
-
+#if DEBUG
+            LoggerService.Utility($"Allocated {in_size} byte{(in_size == 1 ? string.Empty : "s")} at 0x{result:X}.");
+#endif
             return result;
         }
 
@@ -70,6 +76,9 @@ namespace ProcessExtensions
         /// <exception cref="VerboseWin32Exception"/>
         public static nint Alloc(this Process in_process, string in_name, int in_size)
         {
+            if (in_process.HasExited)
+                return 0;
+
             if (_staticAllocations.TryGetValue(in_name, out var out_result))
                 return out_result;
 
@@ -88,14 +97,25 @@ namespace ProcessExtensions
         /// <exception cref="VerboseWin32Exception"/>
         public static void Free(this Process in_process, nint in_address)
         {
+            if (in_process.HasExited)
+                return;
+
             if (in_address == 0)
                 return;
+
+            var moduleBaseStart = in_process.MainModule?.BaseAddress;
+            var moduleBaseEnd = moduleBaseStart + in_process.MainModule?.ModuleMemorySize;
+
+            if (in_address > moduleBaseStart && in_address < moduleBaseEnd)
+                throw new AccessViolationException("Cannot free main module memory.");
 
             var result = Kernel32.VirtualFreeEx(in_process.Handle, in_address, 0, Kernel32.MEM_ALLOCATION_TYPE.MEM_RELEASE);
 
             if (!result)
                 throw new VerboseWin32Exception($"Memory release failed.");
-
+#if DEBUG
+            LoggerService.Utility($"Freed memory at 0x{in_address:X}.");
+#endif
             for (int i = 0; i < _staticAllocations.Count; i++)
             {
                 var alloc = _staticAllocations.ElementAt(i);
@@ -114,6 +134,12 @@ namespace ProcessExtensions
         /// <exception cref="VerboseWin32Exception"/>
         public static void Free(this Process in_process, string in_name)
         {
+            if (in_process.HasExited)
+            {
+                _staticAllocations.Clear();
+                return;
+            }
+
             if (!_staticAllocations.TryGetValue(in_name, out var out_result))
                 return;
 
@@ -131,6 +157,9 @@ namespace ProcessExtensions
         /// <exception cref="VerboseWin32Exception"/>
         public static nint GetThreadLocalStoragePointer(this Process in_process, ProcessThread in_thread)
         {
+            if (in_process.HasExited)
+                return 0;
+
             var handle = Kernel32.OpenThread((int)Kernel32.ThreadAccess.THREAD_ALL_ACCESS, false, (uint)in_thread.Id);
 
             if (handle == 0)
@@ -157,6 +186,9 @@ namespace ProcessExtensions
         /// <returns><c>true</c> if the location is accessible; otherwise <c>false</c>.</returns>
         public static unsafe bool IsMemoryAccessible(this Process in_process, nint in_address)
         {
+            if (in_process.HasExited)
+                return false;
+
             var buffer = new byte[1];
 
             fixed (byte* pBuffer = buffer)
@@ -173,6 +205,9 @@ namespace ProcessExtensions
         /// <exception cref="VerboseWin32Exception"/>
         public static unsafe byte[] ReadBytes(this Process in_process, nint in_address, int in_length)
         {
+            if (in_process.HasExited)
+                return [];
+
             var result = new byte[in_length];
 
             if (in_address == 0)
@@ -195,6 +230,9 @@ namespace ProcessExtensions
         /// <param name="in_address">The remote address to read from.</param>
         public static T Read<T>(this Process in_process, nint in_address) where T : unmanaged
         {
+            if (in_process.HasExited)
+                return default;
+
             var data = in_process.ReadBytes(in_address, Marshal.SizeOf<T>());
 
             if (data.Length <= 0)
@@ -212,6 +250,9 @@ namespace ProcessExtensions
         /// <param name="in_length">The amount of values to read.</param>
         public static T[]? Read<T>(this Process in_process, nint in_address, int in_length) where T : unmanaged
         {
+            if (in_process.HasExited)
+                return default;
+
             var size = Marshal.SizeOf<T>();
             var data = in_process.ReadBytes(in_address, in_length * size);
 
@@ -233,6 +274,9 @@ namespace ProcessExtensions
         /// <param name="in_encoding">The encoding of the string to read.</param>
         public static string ReadStringNullTerminated(this Process in_process, nint in_address, Encoding? in_encoding = null)
         {
+            if (in_process.HasExited)
+                return string.Empty;
+
             var data = new List<byte>();
             var encoding = in_encoding ?? Encoding.UTF8;
 
@@ -280,6 +324,9 @@ namespace ProcessExtensions
         /// <exception cref="VerboseWin32Exception"/>
         public static void WriteBytes(this Process in_process, nint in_address, byte[] in_data, bool in_isProtected = false, bool in_isPreserved = false)
         {
+            if (in_process.HasExited)
+                return;
+
             var oldProtect = Kernel32.MEM_PROTECTION.PAGE_NOACCESS;
 
             if (in_isPreserved)
@@ -304,6 +351,9 @@ namespace ProcessExtensions
         /// <exception cref="VerboseWin32Exception"/>
         public static nint WriteBytes(this Process in_process, byte[] in_data)
         {
+            if (in_process.HasExited)
+                return 0;
+
             var addr = in_process.Alloc(in_data.Length);
 
             in_process.WriteBytes(addr, in_data);
@@ -341,6 +391,9 @@ namespace ProcessExtensions
         /// <exception cref="VerboseWin32Exception"/>
         public static void Write(this Process in_process, nint in_address, object in_data, Type in_type, bool in_isProtected = false, bool in_isPreserved = false)
         {
+            if (in_process.HasExited)
+                return;
+
             var data = MemoryHelper.UnmanagedTypeToByteArray(in_data, in_type);
 
             if (data.Length <= 0)
@@ -373,6 +426,9 @@ namespace ProcessExtensions
         /// <exception cref="VerboseWin32Exception"/>
         public static void Write<T>(this Process in_process, nint in_address, T in_data, bool in_isProtected = false, bool in_isPreserved = false) where T : unmanaged
         {
+            if (in_process.HasExited)
+                return;
+
             in_process.Write(in_address, in_data, in_data.GetType(), in_isProtected, in_isPreserved);
         }
 
@@ -386,6 +442,9 @@ namespace ProcessExtensions
         /// <exception cref="VerboseWin32Exception"/>
         public static nint Write(this Process in_process, object in_data, Type in_type)
         {
+            if (in_process.HasExited)
+                return 0;
+
             return in_process.WriteBytes(MemoryHelper.UnmanagedTypeToByteArray(in_data, in_type));
         }
 
@@ -399,6 +458,9 @@ namespace ProcessExtensions
         /// <exception cref="VerboseWin32Exception"/>
         public static nint Write<T>(this Process in_process, T in_data) where T : unmanaged
         {
+            if (in_process.HasExited)
+                return 0;
+
             return in_process.Write(in_data, in_data.GetType());
         }
 
@@ -412,6 +474,9 @@ namespace ProcessExtensions
         /// <exception cref="VerboseWin32Exception"/>
         public static void WriteProtected<T>(this Process in_process, nint in_address, T in_data, bool in_isPreserved = false) where T : unmanaged
         {
+            if (in_process.HasExited)
+                return;
+
             in_process.Write(in_address, in_data, true, in_isPreserved);
         }
 
@@ -424,6 +489,9 @@ namespace ProcessExtensions
         /// <param name="in_encoding">The encoding of the string to write.</param>
         public static void WriteStringNullTerminated(this Process in_process, nint in_address, string in_str, Encoding? in_encoding = null)
         {
+            if (in_process.HasExited)
+                return;
+
             in_process.WriteProtectedBytes(in_address, (in_encoding ?? Encoding.UTF8).GetBytes(in_str + '\0'));
         }
 
@@ -435,6 +503,9 @@ namespace ProcessExtensions
         /// <param name="in_encoding">The encoding of the string to write.</param>
         public static nint WriteStringNullTerminated(this Process in_process, string in_str, Encoding? in_encoding = null)
         {
+            if (in_process.HasExited)
+                return 0;
+
             var str = (in_encoding ?? Encoding.UTF8).GetBytes(in_str + '\0');
             var addr = in_process.Alloc(str.Length);
 

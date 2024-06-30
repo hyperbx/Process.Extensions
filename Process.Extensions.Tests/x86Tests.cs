@@ -40,6 +40,7 @@ namespace ProcessExtensions
                         new CdeclTests(process, sr),
                         new StdCallTests(process, sr),
                         new FastCallTests(process, sr),
+                        new ThisCallTests(process, sr),
                         new AsmHookTest(process, sr),
                         new SignalExitTest(process, sr)
                     ];

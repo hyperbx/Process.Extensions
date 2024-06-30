@@ -154,7 +154,7 @@ namespace ProcessExtensions
         /// <param name="in_process">The target process to read from.</param>
         /// <param name="in_address">The remote address to check.</param>
         /// <returns><c>true</c> if the location is accessible; otherwise <c>false</c>.</returns>
-        public static unsafe bool IsAccessible(this Process in_process, nint in_address)
+        public static unsafe bool IsMemoryAccessible(this Process in_process, nint in_address)
         {
             var buffer = new byte[1];
 

@@ -12,6 +12,8 @@ namespace ProcessExtensions
 {
     public static class Assembly
     {
+        private static Dictionary<nint, nint> _hooks = [];
+
         /// <summary>
         /// Assembles x86-64 assembly code.
         /// </summary>
@@ -218,6 +220,8 @@ namespace ProcessExtensions
 
                 var asmPtr = in_process.WriteBytes(buffer.Buffer);
                 var asmEnd = asmPtr + buffer.Buffer.Length;
+
+                _hooks.Add(in_address, asmPtr);
 #if DEBUG
                 LoggerService.Utility($"Written mid-ASM hook code at 0x{asmPtr:X}.");
 #endif
@@ -278,6 +282,20 @@ namespace ProcessExtensions
                     in_process.WriteBytes(in_address, jmpBuffer);
                 }
             }
+        }
+
+        /// <summary>
+        /// Removes a mid-ASM hook.
+        /// </summary>
+        /// <param name="in_process">The target process the hook is in.</param>
+        /// <param name="in_address">The remote address the hook was created at.</param>
+        public static void RemoveAsmHook(this Process in_process, nint in_address)
+        {
+            if (in_process.HasExited || in_address == 0 || !_hooks.TryGetValue(in_address, out var out_hookAddr))
+                return;
+
+            in_process.RestoreMemory(in_address);
+            in_process.Free(out_hookAddr);
         }
 
         /// <summary>

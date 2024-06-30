@@ -140,7 +140,7 @@ namespace ProcessExtensions
             handle.Close();
 
             if (threadInfo == null)
-                throw new Win32Exception($"Failed to get thread info ({Marshal.GetLastWin32Error()}).");
+                throw new Win32Exception($"Failed to get information about thread {in_thread.Id} ({Marshal.GetLastWin32Error()}).");
 
             if (threadInfo.TebBaseAddress == 0)
                 throw new Win32Exception($"Invalid environment block in thread {in_thread.Id} ({Marshal.GetLastWin32Error()}).");

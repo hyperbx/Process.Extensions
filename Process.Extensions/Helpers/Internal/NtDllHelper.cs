@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using Vanara.PInvoke;
 
-namespace ProcessExtensions.Helpers
+namespace ProcessExtensions.Helpers.Internal
 {
     internal partial class NtDllHelper
     {

@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace ProcessExtensions.Helpers
+namespace ProcessExtensions.Helpers.Internal
 {
     internal class MemoryHelper
     {

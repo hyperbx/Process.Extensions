@@ -1,5 +1,5 @@
-﻿using ProcessExtensions.Helpers;
 ﻿using ProcessExtensions.Exceptions;
+using ProcessExtensions.Helpers.Internal;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;

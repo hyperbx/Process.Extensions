@@ -1,7 +1,6 @@
-﻿using ProcessExtensions.Helpers;
 ﻿using ProcessExtensions.Exceptions;
+using ProcessExtensions.Helpers.Internal;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using Vanara.PInvoke;
 
 #pragma warning disable CA1416 // Validate platform compatibility

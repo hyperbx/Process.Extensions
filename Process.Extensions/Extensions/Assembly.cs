@@ -1,8 +1,8 @@
 ﻿using Gee.External.Capstone.X86;
 using Keystone;
 using ProcessExtensions.Enums;
-using ProcessExtensions.Helpers;
 using ProcessExtensions.Interop.Generic;
+using ProcessExtensions.Helpers.Internal;
 using ProcessExtensions.Logger;
 using System.Diagnostics;
 using System.Runtime.InteropServices;

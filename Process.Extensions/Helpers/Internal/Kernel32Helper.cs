@@ -3,7 +3,7 @@ using Vanara.PInvoke;
 
 #pragma warning disable CA1416 // Validate platform compatibility
 
-namespace ProcessExtensions.Helpers
+namespace ProcessExtensions.Helpers.Internal
 {
     internal class Kernel32Helper
     {

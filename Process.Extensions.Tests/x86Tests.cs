@@ -29,25 +29,44 @@ namespace ProcessExtensions
 
             using (var sr = new SymbolResolver(_clientPath))
             {
-                var tests = new TestBase[]
+                LoggerService.Warning("Initialising Tests (x86) ------\n");
+
+                TestBase[] tests = [];
+
+                try
                 {
-                    new CdeclTests(process, sr),
-                    new StdCallTests(process, sr),
-                    new FastCallTests(process, sr),
-                    new AsmHookTest(process, sr),
-                    new SignalExitTest(process, sr)
-                };
+                    tests =
+                    [
+                        new CdeclTests(process, sr),
+                        new StdCallTests(process, sr),
+                        new FastCallTests(process, sr),
+                        new AsmHookTest(process, sr),
+                        new SignalExitTest(process, sr)
+                    ];
+
+                    LoggerService.Utility("PASS\n");
+                }
+                catch (Exception out_ex)
+                {
+                    result = false;
+                    LoggerService.Error(out_ex.Message);
+                    LoggerService.Error("FAIL\n");
+                    goto Abort;
+                }
 
                 foreach (var test in tests)
                 {
                     if (!test.RunTests())
-                    {
                         result = false;
+
+                    test.Dispose();
+
+                    if (!result)
                         break;
-                    }
                 }
             }
 
+        Abort:
             process.Kill();
 
             return result;

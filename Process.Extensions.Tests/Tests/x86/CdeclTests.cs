@@ -38,16 +38,19 @@ namespace ProcessExtensions.Tests.x86
 
         public bool cdeclTestReturnStruct_ShouldReturnCorrectStruct()
         {
-            var result = cdeclTestReturnStruct!.Invoke(new UnmanagedPointer(Process, new TestContext(1, 2, 3)));
+            var ctx = cdeclTestReturnStruct!.Invoke(new UnmanagedPointer(Process, new TestContext(1, 2, 3)));
+            var result = new TestContext(1, 2, 3).Equals(ctx.Get<TestContext>(Process));
 
-            return new TestContext(1, 2, 3).Equals(result.Get<TestContext>(Process));
+            ctx.Free(Process);
+
+            return result;
         }
 
         public bool cdeclTestReturnStructPtr_ShouldReturnCorrectStruct()
         {
-            var result = cdeclTestReturnStructPtr!.Invoke();
+            var ctx = cdeclTestReturnStructPtr!.Invoke();
 
-            return new TestContext(1, 2, 3).Equals(result.Get<TestContext>(Process));
+            return new TestContext(1, 2, 3).Equals(ctx.Get<TestContext>(Process));
         }
 
         public bool cdeclTestStructAsArgument_ShouldReturnCorrectSum()
@@ -57,9 +60,12 @@ namespace ProcessExtensions.Tests.x86
 
         public bool cdeclTestStructPtrAsArgument_ShouldReturnCorrectSum()
         {
-            var pCtx = Process.Write(new TestContext(1, 2, 3));
+            var ctx = new UnmanagedPointer(Process, new TestContext(1, 2, 3));
+            var result = cdeclTestStructPtrAsArgument!.Invoke(ctx) == 6;
 
-            return cdeclTestStructPtrAsArgument!.Invoke(pCtx) == 6;
+            ctx.Free(Process);
+
+            return result;
         }
 
         public override Func<bool>[] GetTests()
@@ -75,6 +81,24 @@ namespace ProcessExtensions.Tests.x86
                 cdeclTestStructAsArgument_ShouldReturnCorrectSum,
                 cdeclTestStructPtrAsArgument_ShouldReturnCorrectSum
             ];
+        }
+
+        public override void Dispose()
+        {
+#if DEBUG
+            LoggerService.Warning("__cdecl Cleanup (x86) ---------\n");
+#endif
+
+            cdeclTestNoArguments?.Dispose();
+            cdeclTestSumOfArguments?.Dispose();
+            cdeclTestReturnStruct?.Dispose();
+            cdeclTestReturnStructPtr?.Dispose();
+            cdeclTestStructAsArgument?.Dispose();
+            cdeclTestStructPtrAsArgument?.Dispose();
+
+#if DEBUG
+            LoggerService.WriteLine();
+#endif
         }
     }
 }

@@ -38,16 +38,21 @@ namespace ProcessExtensions.Tests.x86
 
         public bool stdcallTestReturnStruct_ShouldReturnCorrectStruct()
         {
-            var result = stdcallTestReturnStruct!.Invoke(new UnmanagedPointer(Process, new TestContext(1, 2, 3)));
+            var in_ctx = new UnmanagedPointer(Process, new TestContext(1, 2, 3));
+            var out_ctx = stdcallTestReturnStruct!.Invoke(in_ctx);
 
-            return new TestContext(1, 2, 3).Equals(result.Get<TestContext>(Process));
+            var result = new TestContext(1, 2, 3).Equals(out_ctx.Get<TestContext>(Process));
+
+            in_ctx.Free(Process);
+
+            return result;
         }
 
         public bool stdcallTestReturnStructPtr_ShouldReturnCorrectStruct()
         {
-            var result = stdcallTestReturnStructPtr!.Invoke();
+            var ctx = stdcallTestReturnStructPtr!.Invoke();
 
-            return new TestContext(1, 2, 3).Equals(result.Get<TestContext>(Process));
+            return new TestContext(1, 2, 3).Equals(ctx.Get<TestContext>(Process));
         }
 
         public bool stdcallTestStructAsArgument_ShouldReturnCorrectSum()
@@ -57,9 +62,13 @@ namespace ProcessExtensions.Tests.x86
 
         public bool stdcallTestStructPtrAsArgument_ShouldReturnCorrectSum()
         {
-            var pCtx = Process.Write(new TestContext(1, 2, 3));
+            var in_ctx = new UnmanagedPointer(Process, new TestContext(1, 2, 3));
 
-            return stdcallTestStructPtrAsArgument!.Invoke(pCtx) == 6;
+            var result = stdcallTestStructPtrAsArgument!.Invoke(in_ctx) == 6;
+
+            in_ctx.Free(Process);
+
+            return result;
         }
 
         public override Func<bool>[] GetTests()
@@ -75,6 +84,24 @@ namespace ProcessExtensions.Tests.x86
                 stdcallTestStructAsArgument_ShouldReturnCorrectSum,
                 stdcallTestStructPtrAsArgument_ShouldReturnCorrectSum
             ];
+        }
+
+        public override void Dispose()
+        {
+#if DEBUG
+            LoggerService.Warning("__stdcall Cleanup (x86) -------\n");
+#endif
+
+            stdcallTestNoArguments?.Dispose();
+            stdcallTestSumOfArguments?.Dispose();
+            stdcallTestReturnStruct?.Dispose();
+            stdcallTestReturnStructPtr?.Dispose();
+            stdcallTestStructAsArgument?.Dispose();
+            stdcallTestStructPtrAsArgument?.Dispose();
+
+#if DEBUG
+            LoggerService.WriteLine();
+#endif
         }
     }
 }

@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace ProcessExtensions.Tests
 {
-    internal class TestBase(Process in_process)
+    internal class TestBase(Process in_process) : IDisposable
     {
         protected Process Process = in_process;
 
@@ -50,6 +50,11 @@ namespace ProcessExtensions.Tests
             }
 
             return result;
+        }
+
+        public virtual void Dispose()
+        {
+            throw new NotImplementedException();
         }
     }
 }

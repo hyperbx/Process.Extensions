@@ -21,6 +21,8 @@ namespace ProcessExtensions.Tests.x86
         public bool fastcallTestSumOfArguments_ShouldReturnCorrectSubtraction()
         {
 #if DEBUG
+            _fastcallTestSumOfArgumentsAddr = Process.ScanSignature("\x03\x45\xEC\x03\x45\x08", "xxxxxx", _fastcallTestSumOfArgumentsAddr);
+
             Process.WriteAsmHook
             (
                 $@"
@@ -28,9 +30,11 @@ namespace ProcessExtensions.Tests.x86
                     sub eax, [ebp + 0x08]
                 ",
 
-                Process.ScanSignature("\x03\x45\xEC\x03\x45\x08", "xxxxxx", _fastcallTestSumOfArgumentsAddr)
+                _fastcallTestSumOfArgumentsAddr
             );
 #else
+            _fastcallTestSumOfArgumentsAddr = Process.ScanSignature("\x03\x45\xF8\x03\x45\x08", "xxxxxx", _fastcallTestSumOfArgumentsAddr);
+
             Process.WriteAsmHook
             (
                 $@"
@@ -38,7 +42,7 @@ namespace ProcessExtensions.Tests.x86
                     sub eax, [ebp + 0x08]
                 ",
 
-                Process.ScanSignature("\x03\x45\xF8\x03\x45\x08", "xxxxxx", _fastcallTestSumOfArgumentsAddr)
+                _fastcallTestSumOfArgumentsAddr
             );
 #endif
 
@@ -50,6 +54,21 @@ namespace ProcessExtensions.Tests.x86
             LoggerService.Warning("Mid-ASM Hook Tests (x86) ------\n");
 
             return [fastcallTestSumOfArguments_ShouldReturnCorrectSubtraction];
+        }
+
+        public override void Dispose()
+        {
+#if DEBUG
+            LoggerService.Warning("Mid-ASM Hook Cleanup (x86) ----\n");
+#endif
+
+            Process.RemoveAsmHook(_fastcallTestSumOfArgumentsAddr);
+
+            fastcallTestSumOfArguments?.Dispose();
+
+#if DEBUG
+            LoggerService.WriteLine();
+#endif
         }
     }
 }

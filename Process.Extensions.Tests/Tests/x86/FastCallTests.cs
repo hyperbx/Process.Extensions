@@ -38,16 +38,21 @@ namespace ProcessExtensions.Tests.x86
 
         public bool fastcallTestReturnStruct_ShouldReturnCorrectStruct()
         {
-            var result = fastcallTestReturnStruct!.Invoke(new UnmanagedPointer(Process, new TestContext(1, 2, 3)));
+            var in_ctx = new UnmanagedPointer(Process, new TestContext(1, 2, 3));
+            var out_ctx = fastcallTestReturnStruct!.Invoke(in_ctx);
 
-            return new TestContext(1, 2, 3).Equals(result.Get<TestContext>(Process));
+            var result = new TestContext(1, 2, 3).Equals(out_ctx.Get<TestContext>(Process));
+
+            in_ctx.Free(Process);
+
+            return result;
         }
 
         public bool fastcallTestReturnStructPtr_ShouldReturnCorrectStruct()
         {
-            var result = fastcallTestReturnStructPtr!.Invoke();
+            var ctx = fastcallTestReturnStructPtr!.Invoke();
 
-            return new TestContext(1, 2, 3).Equals(result.Get<TestContext>(Process));
+            return new TestContext(1, 2, 3).Equals(ctx.Get<TestContext>(Process));
         }
 
         public bool fastcallTestStructAsArgument_ShouldReturnCorrectSum()
@@ -60,9 +65,13 @@ namespace ProcessExtensions.Tests.x86
 
         public bool fastcallTestStructPtrAsArgument_ShouldReturnCorrectSum()
         {
-            var pCtx = Process.Write(new TestContext(1, 2, 3));
+            var in_ctx = new UnmanagedPointer(Process, new TestContext(1, 2, 3));
 
-            return fastcallTestStructPtrAsArgument!.Invoke(pCtx) == 6;
+            var result = fastcallTestStructPtrAsArgument!.Invoke(in_ctx) == 6;
+
+            in_ctx.Free(Process);
+
+            return result;
         }
 
         public override Func<bool>[] GetTests()
@@ -78,6 +87,24 @@ namespace ProcessExtensions.Tests.x86
                 fastcallTestStructAsArgument_ShouldReturnCorrectSum,
                 fastcallTestStructPtrAsArgument_ShouldReturnCorrectSum
             ];
+        }
+
+        public override void Dispose()
+        {
+#if DEBUG
+            LoggerService.Warning("__fastcall Cleanup (x86) ------\n");
+#endif
+
+            fastcallTestNoArguments?.Dispose();
+            fastcallTestSumOfArguments?.Dispose();
+            fastcallTestReturnStruct?.Dispose();
+            fastcallTestReturnStructPtr?.Dispose();
+            fastcallTestStructAsArgument?.Dispose();
+            fastcallTestStructPtrAsArgument?.Dispose();
+
+#if DEBUG
+            LoggerService.WriteLine();
+#endif
         }
     }
 }

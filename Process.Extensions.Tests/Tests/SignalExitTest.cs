@@ -33,5 +33,10 @@ namespace ProcessExtensions.Tests
 
             return [signalExit_ShouldTerminateProcess];
         }
+
+        public override void Dispose()
+        {
+            signalExit?.Dispose();
+        }
     }
 }

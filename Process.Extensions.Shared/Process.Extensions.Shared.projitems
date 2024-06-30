@@ -6,7 +6,7 @@
     <SharedGUID>f6fe0738-daf9-40b3-a784-db74a7f59eaf</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>Process.Extensions.Shared</Import_RootNamespace>
+    <Import_RootNamespace>ProcessExtensions</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Logger\Enums\ELogLevel.cs" />

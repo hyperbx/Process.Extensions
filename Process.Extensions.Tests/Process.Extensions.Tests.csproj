@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <RootNamespace>ProcessExtensions</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>$(MSBuildProjectName.Replace(" ", "_").Replace(".", ""))</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

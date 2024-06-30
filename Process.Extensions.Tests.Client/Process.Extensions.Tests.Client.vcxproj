@@ -22,7 +22,7 @@
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{d5f36c5d-5225-4c4b-8479-4be3ce94a6c8}</ProjectGuid>
-    <RootNamespace>ProcessExtensionsTestsClient</RootNamespace>
+    <RootNamespace>ProcessExtensions</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>Process.Extensions.Tests.Client</ProjectName>
   </PropertyGroup>

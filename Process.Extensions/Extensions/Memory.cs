@@ -246,35 +246,58 @@ namespace ProcessExtensions
             if (in_process.HasExited)
                 return string.Empty;
 
-            var data = new List<byte>();
-            var encoding = in_encoding ?? Encoding.UTF8;
+            in_encoding ??= Encoding.UTF8;
 
             var addr = in_address;
 
-            if (encoding == Encoding.Unicode ||
-                encoding == Encoding.BigEndianUnicode)
+            var buffer = new byte[1024];
+            var bufferIndex = 0;
+
+            const int chunkSize = 16;
+
+            while (true)
             {
-                ushort us;
+                var bytes = in_process.ReadBytes(addr, chunkSize);
 
-                while ((us = in_process.Read<ushort>(addr)) != 0)
+                for (int i = 0; i < bytes.Length; i++)
                 {
-                    data.Add((byte)(us & 0xFF));
-                    data.Add((byte)(us >> 8 & 0xFF));
-                    addr += 2;
-                }
-            }
-            else
-            {
-                byte b;
+                    if (in_encoding == Encoding.Unicode || in_encoding == Encoding.BigEndianUnicode)
+                    {
+                        if (i + 1 >= bytes.Length)
+                            break;
 
-                while ((b = in_process.Read<byte>(addr)) != 0)
-                {
-                    data.Add(b);
-                    addr++;
-                }
-            }
+                        ushort us = BitConverter.ToUInt16(bytes, i);
 
-            return encoding.GetString(data.ToArray());
+                        if (us == 0)
+                            return in_encoding.GetString(buffer, 0, bufferIndex);
+
+                        if (in_encoding == Encoding.BigEndianUnicode)
+                        {
+                            buffer[bufferIndex++] = (byte)(us >> 8 & 0xFF);
+                            buffer[bufferIndex++] = (byte)(us & 0xFF);
+                        }
+                        else
+                        {
+                            buffer[bufferIndex++] = (byte)(us & 0xFF);
+                            buffer[bufferIndex++] = (byte)(us >> 8 & 0xFF);
+                        }
+
+                        i++;
+                    }
+                    else
+                    {
+                        if (bytes[i] == 0)
+                            return in_encoding.GetString(buffer, 0, bufferIndex);
+
+                        buffer[bufferIndex++] = bytes[i];
+                    }
+
+                    if (bufferIndex >= buffer.Length - chunkSize)
+                        Array.Resize(ref buffer, buffer.Length * 2);
+                }
+
+                addr += chunkSize;
+            }
         }
 
         /// <summary>

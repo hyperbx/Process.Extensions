@@ -31,12 +31,9 @@ namespace ProcessExtensions.Interop.Context
                 {
                     in_args[i] = ((UnmanagedPointer)arg).pData;
                 }
-                else if (argType.IsStruct())
+                else if (argType.Equals(typeof(UnmanagedString)))
                 {
-                    in_args[i] = _process.WriteBytes(MemoryHelper.UnmanagedTypeToByteArray(arg, argType));
-
-                    _allocations.Add((nint)in_args[i]);
-                    _nonPrimitiveIndices.Add(i);
+                    in_args[i] = ((UnmanagedString)arg).pData;
                 }
                 else if (argType.Equals(typeof(string)))
                 {

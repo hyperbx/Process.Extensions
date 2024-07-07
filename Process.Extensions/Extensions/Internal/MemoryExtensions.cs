@@ -4,12 +4,9 @@
     {
         public static T Align<T>(this T in_ptr, int in_alignment) where T : unmanaged, IConvertible
         {
-            long ptr = in_ptr.ToInt64(null);
+            var ptr = in_ptr.ToInt64(null);
 
-            while (ptr % in_alignment != 0)
-                ptr++;
-
-            return (T)Convert.ChangeType(ptr, typeof(T));
+            return (T)Convert.ChangeType((ptr + (in_alignment - 1)) & ~(in_alignment - 1), typeof(T));
         }
     }
 }

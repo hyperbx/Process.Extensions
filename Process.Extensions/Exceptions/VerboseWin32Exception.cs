@@ -3,10 +3,21 @@ using System.Runtime.InteropServices;
 
 namespace ProcessExtensions.Exceptions
 {
-    public class VerboseWin32Exception(string in_message)
-        : Win32Exception(string.Format(_format, GetExceptionMessage(in_message), GetWin32ErrorMessage()))
+    public class VerboseWin32Exception : Win32Exception
     {
-        private const string _format = "{0} Reason: {1}";
+        private const string _format = "{0} Reason: {1} ({2})";
+
+        public VerboseWin32Exception(string in_message) : base(GetFormatted(in_message)) { }
+
+        public VerboseWin32Exception(string in_message, int in_err) : base(GetFormatted(in_message, in_err)) { }
+
+        private static string GetFormatted(string in_message, int in_err = -1)
+        {
+            if (in_err == -1)
+                in_err = Marshal.GetLastWin32Error();
+
+            return string.Format(_format, GetExceptionMessage(in_message), GetWin32ErrorMessage(in_err), in_err);
+        }
 
         private static string GetExceptionMessage(string in_message)
         {
@@ -16,9 +27,9 @@ namespace ProcessExtensions.Exceptions
                 : in_message;
         }
 
-        private static string GetWin32ErrorMessage()
+        private static string GetWin32ErrorMessage(int in_err)
         {
-            var msg = Marshal.GetPInvokeErrorMessage(Marshal.GetLastWin32Error());
+            var msg = Marshal.GetPInvokeErrorMessage(in_err);
 
             // Make first char lowercase.
             if (char.IsUpper(msg[0]))

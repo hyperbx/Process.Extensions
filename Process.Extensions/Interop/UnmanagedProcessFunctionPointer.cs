@@ -55,11 +55,11 @@ namespace ProcessExtensions.Interop
             }
         }
 
-        public CallingConvention CallingConvention { get; set; }
+        public ECallingConvention CallingConvention { get; set; }
 
         public bool IsVariadicArgs { get; set; }
 
-        public TypeCode[]? ArgumentTypes { get; set; }
+        public ETypeCode[]? ArgumentTypes { get; set; }
 
         public bool IsThrowOnProcessExit { get; set; } = true;
 
@@ -70,23 +70,23 @@ namespace ProcessExtensions.Interop
         /// <param name="in_address">The remote address of the function to execute.</param>
         /// <param name="in_callingConvention">The calling convention of the function.</param>
         /// <param name="in_isVariadicArgs">Determines whether the function uses variadic arguments.</param>
-        public UnmanagedProcessFunctionPointer(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+        public UnmanagedProcessFunctionPointer(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         {
             Process = in_process;
             Address = in_address;
             CallingConvention = in_callingConvention;
 
-            if (CallingConvention == CallingConvention.Winapi)
+            if (CallingConvention == ECallingConvention.Windows)
             {
                 CallingConvention = in_process.Is64Bit()
-                    ? CallingConvention.FastCall
-                    : CallingConvention.StdCall;
+                    ? ECallingConvention.FastCall
+                    : ECallingConvention.StdCall;
             }
-            else
+            else if (CallingConvention != ECallingConvention.UserCall)
             {
                 // x86-64 is always __fastcall.
                 if (in_process.Is64Bit())
-                    CallingConvention = CallingConvention.FastCall;
+                    CallingConvention = ECallingConvention.FastCall;
             }
 
             IsVariadicArgs = in_isVariadicArgs;
@@ -100,7 +100,7 @@ namespace ProcessExtensions.Interop
         /// <param name="in_callingConvention">The calling convention of the function.</param>
         /// <param name="in_isVariadicArgs">Determines whether the function uses variadic arguments.</param>
         /// <param name="in_argumentTypes">The type codes for each argument.</param>
-        public UnmanagedProcessFunctionPointer(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false, params TypeCode[] in_argumentTypes)
+        public UnmanagedProcessFunctionPointer(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false, params ETypeCode[] in_argumentTypes)
             : this(in_process, in_address, in_callingConvention, in_isVariadicArgs)
         {
             ArgumentTypes = in_argumentTypes;
@@ -275,7 +275,7 @@ namespace ProcessExtensions.Interop
                 {
                     var argType = ArgumentTypes[i];
 
-                    if (Type.GetTypeCode(in_args[i].GetType()) != argType)
+                    if (in_args[i].GetType().IsMatchingTypeCode(argType))
                         throw new InvalidCastException($"Argument {i} is not of type {argType}.");
                 }
             }
@@ -310,10 +310,10 @@ namespace ProcessExtensions.Interop
     /// <summary>
     /// Defines a pointer to an unmanaged function in a native process.
     /// </summary>
-    public class UnmanagedProcessFunctionPointer(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+    public class UnmanagedProcessFunctionPointer(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         : UnmanagedProcessFunctionPointer<UnmanagedVoid>(in_process, in_address, in_callingConvention, in_isVariadicArgs)
     {
-        public UnmanagedProcessFunctionPointer(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, params TypeCode[] in_argumentTypes)
+        public UnmanagedProcessFunctionPointer(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, params ETypeCode[] in_argumentTypes)
             : this(in_process, in_address, in_callingConvention)
         {
             ArgumentTypes = in_argumentTypes;
@@ -340,7 +340,7 @@ namespace ProcessExtensions.Interop
     ///     <para>If there is no return value, set this to <see cref="UnmanagedVoid"/>.</para>
     /// </typeparam>
     /// <typeparam name="T">The type of the first argument of the unmanaged function.</typeparam>
-    public class UnmanagedProcessFunctionPointer<TResult, T>(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+    public class UnmanagedProcessFunctionPointer<TResult, T>(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         : UnmanagedProcessFunctionPointer<TResult>(in_process, in_address, in_callingConvention, in_isVariadicArgs)
             where TResult : unmanaged
             where T       : unmanaged
@@ -367,7 +367,7 @@ namespace ProcessExtensions.Interop
     /// </typeparam>
     /// <typeparam name="T1">The type of the first argument of the unmanaged function.</typeparam>
     /// <typeparam name="T2">The type of the second argument of the unmanaged function.</typeparam>
-    public class UnmanagedProcessFunctionPointer<TResult, T1, T2>(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+    public class UnmanagedProcessFunctionPointer<TResult, T1, T2>(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         : UnmanagedProcessFunctionPointer<TResult>(in_process, in_address, in_callingConvention, in_isVariadicArgs)
             where TResult : unmanaged
             where T1      : unmanaged
@@ -397,7 +397,7 @@ namespace ProcessExtensions.Interop
     /// <typeparam name="T1">The type of the first argument of the unmanaged function.</typeparam>
     /// <typeparam name="T2">The type of the second argument of the unmanaged function.</typeparam>
     /// <typeparam name="T3">The type of the third argument of the unmanaged function.</typeparam>
-    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3>(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3>(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         : UnmanagedProcessFunctionPointer<TResult>(in_process, in_address, in_callingConvention, in_isVariadicArgs)
             where TResult : unmanaged
             where T1      : unmanaged
@@ -430,7 +430,7 @@ namespace ProcessExtensions.Interop
     /// <typeparam name="T2">The type of the second argument of the unmanaged function.</typeparam>
     /// <typeparam name="T3">The type of the third argument of the unmanaged function.</typeparam>
     /// <typeparam name="T4">The type of the fourth argument of the unmanaged function.</typeparam>
-    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4>(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4>(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         : UnmanagedProcessFunctionPointer<TResult>(in_process, in_address, in_callingConvention, in_isVariadicArgs)
             where TResult : unmanaged
             where T1      : unmanaged
@@ -466,7 +466,7 @@ namespace ProcessExtensions.Interop
     /// <typeparam name="T3">The type of the third argument of the unmanaged function.</typeparam>
     /// <typeparam name="T4">The type of the fourth argument of the unmanaged function.</typeparam>
     /// <typeparam name="T5">The type of the fifth argument of the unmanaged function.</typeparam>
-    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5>(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5>(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         : UnmanagedProcessFunctionPointer<TResult>(in_process, in_address, in_callingConvention, in_isVariadicArgs)
             where TResult : unmanaged
             where T1      : unmanaged
@@ -505,7 +505,7 @@ namespace ProcessExtensions.Interop
     /// <typeparam name="T4">The type of the fourth argument of the unmanaged function.</typeparam>
     /// <typeparam name="T5">The type of the fifth argument of the unmanaged function.</typeparam>
     /// <typeparam name="T6">The type of the sixth argument of the unmanaged function.</typeparam>
-    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6>(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6>(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         : UnmanagedProcessFunctionPointer<TResult>(in_process, in_address, in_callingConvention, in_isVariadicArgs)
             where TResult : unmanaged
             where T1      : unmanaged
@@ -547,7 +547,7 @@ namespace ProcessExtensions.Interop
     /// <typeparam name="T5">The type of the fifth argument of the unmanaged function.</typeparam>
     /// <typeparam name="T6">The type of the sixth argument of the unmanaged function.</typeparam>
     /// <typeparam name="T7">The type of the seventh argument of the unmanaged function.</typeparam>
-    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7>(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7>(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         : UnmanagedProcessFunctionPointer<TResult>(in_process, in_address, in_callingConvention, in_isVariadicArgs)
             where TResult : unmanaged
             where T1      : unmanaged
@@ -592,7 +592,7 @@ namespace ProcessExtensions.Interop
     /// <typeparam name="T6">The type of the sixth argument of the unmanaged function.</typeparam>
     /// <typeparam name="T7">The type of the seventh argument of the unmanaged function.</typeparam>
     /// <typeparam name="T8">The type of the eighth argument of the unmanaged function.</typeparam>
-    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8>(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8>(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         : UnmanagedProcessFunctionPointer<TResult>(in_process, in_address, in_callingConvention, in_isVariadicArgs)
             where TResult : unmanaged
             where T1      : unmanaged
@@ -640,7 +640,7 @@ namespace ProcessExtensions.Interop
     /// <typeparam name="T7">The type of the seventh argument of the unmanaged function.</typeparam>
     /// <typeparam name="T8">The type of the eighth argument of the unmanaged function.</typeparam>
     /// <typeparam name="T9">The type of the ninth argument of the unmanaged function.</typeparam>
-    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9>(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9>(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         : UnmanagedProcessFunctionPointer<TResult>(in_process, in_address, in_callingConvention, in_isVariadicArgs)
             where TResult : unmanaged
             where T1      : unmanaged
@@ -691,7 +691,7 @@ namespace ProcessExtensions.Interop
     /// <typeparam name="T8">The type of the eighth argument of the unmanaged function.</typeparam>
     /// <typeparam name="T9">The type of the ninth argument of the unmanaged function.</typeparam>
     /// <typeparam name="T10">The type of the tenth argument of the unmanaged function.</typeparam>
-    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         : UnmanagedProcessFunctionPointer<TResult>(in_process, in_address, in_callingConvention, in_isVariadicArgs)
             where TResult : unmanaged
             where T1      : unmanaged
@@ -745,7 +745,7 @@ namespace ProcessExtensions.Interop
     /// <typeparam name="T9">The type of the ninth argument of the unmanaged function.</typeparam>
     /// <typeparam name="T10">The type of the 10th argument of the unmanaged function.</typeparam>
     /// <typeparam name="T11">The type of the 11th argument of the unmanaged function.</typeparam>
-    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         : UnmanagedProcessFunctionPointer<TResult>(in_process, in_address, in_callingConvention, in_isVariadicArgs)
             where TResult : unmanaged
             where T1      : unmanaged
@@ -802,7 +802,7 @@ namespace ProcessExtensions.Interop
     /// <typeparam name="T10">The type of the 10th argument of the unmanaged function.</typeparam>
     /// <typeparam name="T11">The type of the 11th argument of the unmanaged function.</typeparam>
     /// <typeparam name="T12">The type of the 12th argument of the unmanaged function.</typeparam>
-    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         : UnmanagedProcessFunctionPointer<TResult>(in_process, in_address, in_callingConvention, in_isVariadicArgs)
             where TResult : unmanaged
             where T1      : unmanaged
@@ -862,7 +862,7 @@ namespace ProcessExtensions.Interop
     /// <typeparam name="T11">The type of the 11th argument of the unmanaged function.</typeparam>
     /// <typeparam name="T12">The type of the 12th argument of the unmanaged function.</typeparam>
     /// <typeparam name="T13">The type of the 13th argument of the unmanaged function.</typeparam>
-    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         : UnmanagedProcessFunctionPointer<TResult>(in_process, in_address, in_callingConvention, in_isVariadicArgs)
             where TResult : unmanaged
             where T1      : unmanaged
@@ -925,7 +925,7 @@ namespace ProcessExtensions.Interop
     /// <typeparam name="T12">The type of the 12th argument of the unmanaged function.</typeparam>
     /// <typeparam name="T13">The type of the 13th argument of the unmanaged function.</typeparam>
     /// <typeparam name="T14">The type of the 14th argument of the unmanaged function.</typeparam>
-    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         : UnmanagedProcessFunctionPointer<TResult>(in_process, in_address, in_callingConvention, in_isVariadicArgs)
             where TResult : unmanaged
             where T1      : unmanaged
@@ -991,7 +991,7 @@ namespace ProcessExtensions.Interop
     /// <typeparam name="T13">The type of the 13th argument of the unmanaged function.</typeparam>
     /// <typeparam name="T14">The type of the 14th argument of the unmanaged function.</typeparam>
     /// <typeparam name="T15">The type of the 15th argument of the unmanaged function.</typeparam>
-    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         : UnmanagedProcessFunctionPointer<TResult>(in_process, in_address, in_callingConvention, in_isVariadicArgs)
             where TResult : unmanaged
             where T1      : unmanaged
@@ -1061,7 +1061,7 @@ namespace ProcessExtensions.Interop
     /// <typeparam name="T14">The type of the 14th argument of the unmanaged function.</typeparam>
     /// <typeparam name="T15">The type of the 15th argument of the unmanaged function.</typeparam>
     /// <typeparam name="T16">The type of the 16th argument of the unmanaged function.</typeparam>
-    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(Process in_process, nint in_address, CallingConvention in_callingConvention = CallingConvention.FastCall, bool in_isVariadicArgs = false)
+    public class UnmanagedProcessFunctionPointer<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(Process in_process, nint in_address, ECallingConvention in_callingConvention = ECallingConvention.FastCall, bool in_isVariadicArgs = false)
         : UnmanagedProcessFunctionPointer<TResult>(in_process, in_address, in_callingConvention, in_isVariadicArgs)
             where TResult : unmanaged
             where T1      : unmanaged

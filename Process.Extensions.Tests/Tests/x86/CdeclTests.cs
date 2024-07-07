@@ -1,9 +1,9 @@
-﻿using ProcessExtensions.Interop;
+﻿using ProcessExtensions.Enums;
+using ProcessExtensions.Interop;
 using ProcessExtensions.Interop.Generic;
 using ProcessExtensions.Interop.Structures;
 using ProcessExtensions.Logger;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace ProcessExtensions.Tests.x86
 {
@@ -18,12 +18,12 @@ namespace ProcessExtensions.Tests.x86
 
         public CdeclTests(Process in_process, SymbolResolver in_sr) : base(in_process)
         {
-            cdeclTestNoArguments         = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("cdeclTestNoArguments")), CallingConvention.Cdecl);
-            cdeclTestSumOfArguments      = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("cdeclTestSumOfArguments")), CallingConvention.Cdecl);
-            cdeclTestReturnStruct        = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("cdeclTestReturnStruct")), CallingConvention.Cdecl);
-            cdeclTestReturnStructPtr     = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("cdeclTestReturnStructPtr")), CallingConvention.Cdecl);
-            cdeclTestStructAsArgument    = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("cdeclTestSumOfArguments")), CallingConvention.Cdecl);
-            cdeclTestStructPtrAsArgument = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("cdeclTestStructPtrAsArgument")), CallingConvention.Cdecl);
+            cdeclTestNoArguments = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("cdeclTestNoArguments")), ECallingConvention.Cdecl);
+            cdeclTestSumOfArguments = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("cdeclTestSumOfArguments")), ECallingConvention.Cdecl);
+            cdeclTestReturnStruct = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("cdeclTestReturnStruct")), ECallingConvention.Cdecl);
+            cdeclTestReturnStructPtr = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("cdeclTestReturnStructPtr")), ECallingConvention.Cdecl);
+            cdeclTestStructAsArgument = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("cdeclTestStructAsArgument")), ECallingConvention.Cdecl);
+            cdeclTestStructPtrAsArgument = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("cdeclTestStructPtrAsArgument")), ECallingConvention.Cdecl);
         }
 
         public bool cdeclTestNoArguments_ShouldReturnTrue()

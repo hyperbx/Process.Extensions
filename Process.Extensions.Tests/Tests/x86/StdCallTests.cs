@@ -1,9 +1,9 @@
-﻿using ProcessExtensions.Interop;
+﻿using ProcessExtensions.Enums;
+using ProcessExtensions.Interop;
 using ProcessExtensions.Interop.Generic;
 using ProcessExtensions.Interop.Structures;
 using ProcessExtensions.Logger;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace ProcessExtensions.Tests.x86
 {
@@ -18,12 +18,12 @@ namespace ProcessExtensions.Tests.x86
 
         public StdCallTests(Process in_process, SymbolResolver in_sr) : base(in_process)
         {
-            stdcallTestNoArguments         = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestNoArguments")), CallingConvention.StdCall);
-            stdcallTestSumOfArguments      = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestSumOfArguments")), CallingConvention.StdCall);
-            stdcallTestReturnStruct        = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestReturnStruct")), CallingConvention.StdCall);
-            stdcallTestReturnStructPtr     = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestReturnStructPtr")), CallingConvention.StdCall);
-            stdcallTestStructAsArgument    = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestStructAsArgument")), CallingConvention.StdCall);
-            stdcallTestStructPtrAsArgument = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestStructPtrAsArgument")), CallingConvention.StdCall);
+            stdcallTestNoArguments = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestNoArguments")), ECallingConvention.StdCall);
+            stdcallTestSumOfArguments = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestSumOfArguments")), ECallingConvention.StdCall);
+            stdcallTestReturnStruct = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestReturnStruct")), ECallingConvention.StdCall);
+            stdcallTestReturnStructPtr = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestReturnStructPtr")), ECallingConvention.StdCall);
+            stdcallTestStructAsArgument = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestStructAsArgument")), ECallingConvention.StdCall);
+            stdcallTestStructPtrAsArgument = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestStructPtrAsArgument")), ECallingConvention.StdCall);
         }
 
         public bool stdcallTestNoArguments_ShouldReturnTrue()

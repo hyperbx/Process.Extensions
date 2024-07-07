@@ -1,9 +1,9 @@
-﻿using ProcessExtensions.Interop;
+﻿using ProcessExtensions.Enums;
+using ProcessExtensions.Interop;
 using ProcessExtensions.Interop.Generic;
 using ProcessExtensions.Interop.Structures;
 using ProcessExtensions.Logger;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace ProcessExtensions.Tests.x86
 {
@@ -23,13 +23,13 @@ namespace ProcessExtensions.Tests.x86
         {
             _ctx = new UnmanagedPointer(Process, new TestContext(1, 2, 3));
             
-            thiscallTestNoArguments                   = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("testContext::thiscallTestNoArguments")), CallingConvention.ThisCall);
-            thiscallTestSumOfFields                   = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("testContext::thiscallTestSumOfFields")), CallingConvention.ThisCall);
-            thiscallTestSumOfFieldsAndArguments       = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("testContext::thiscallTestSumOfFieldsAndArguments")), CallingConvention.ThisCall);
-            thiscallTestSumOfFieldsAndArgumentsNested = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("testContext::thiscallTestSumOfFieldsAndArgumentsNested")), CallingConvention.ThisCall);
-            thiscallTestReturnStruct                  = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("testContext::thiscallTestReturnStruct")), CallingConvention.ThisCall);
-            thiscallTestStructAsArgument              = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("testContext::thiscallTestStructAsArgument")), CallingConvention.ThisCall);
-            thiscallTestStructPtrAsArgument           = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("testContext::thiscallTestStructPtrAsArgument")), CallingConvention.ThisCall);
+            thiscallTestNoArguments = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("testContext::thiscallTestNoArguments")), ECallingConvention.ThisCall);
+            thiscallTestSumOfFields = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("testContext::thiscallTestSumOfFields")), ECallingConvention.ThisCall);
+            thiscallTestSumOfFieldsAndArguments = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("testContext::thiscallTestSumOfFieldsAndArguments")), ECallingConvention.ThisCall);
+            thiscallTestSumOfFieldsAndArgumentsNested = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("testContext::thiscallTestSumOfFieldsAndArgumentsNested")), ECallingConvention.ThisCall);
+            thiscallTestReturnStruct = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("testContext::thiscallTestReturnStruct")), ECallingConvention.ThisCall);
+            thiscallTestStructAsArgument = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("testContext::thiscallTestStructAsArgument")), ECallingConvention.ThisCall);
+            thiscallTestStructPtrAsArgument = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("testContext::thiscallTestStructPtrAsArgument")), ECallingConvention.ThisCall);
         }
 
         public bool thiscallTestNoArguments_ShouldReturnTrue()

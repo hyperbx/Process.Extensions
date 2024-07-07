@@ -1,23 +1,23 @@
-﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
+﻿using ProcessExtensions.Enums;
+using System.Diagnostics;
 using Vanara.PInvoke;
 
 namespace ProcessExtensions.Interop.Context
 {
-    internal class ContextFactory(Process in_process, Kernel32.SafeHTHREAD? in_threadHandle, CallingConvention in_callingConvention = CallingConvention.FastCall)
+    public class ContextFactory(Process in_process, Kernel32.SafeHTHREAD? in_threadHandle, ECallingConvention in_callingConvention = ECallingConvention.FastCall)
     {
         public BaseContext Get()
         {
             switch (in_callingConvention)
             {
-                case CallingConvention.Cdecl:
-                case CallingConvention.StdCall:
+                case ECallingConvention.Cdecl:
+                case ECallingConvention.StdCall:
                     return new CdeclContext(in_process, in_threadHandle);
 
-                case CallingConvention.ThisCall:
+                case ECallingConvention.ThisCall:
                     return new ThisCallContext(in_process, in_threadHandle);
 
-                case CallingConvention.FastCall:
+                case ECallingConvention.FastCall:
                     return new FastCallContext(in_process, in_threadHandle);
             }
 
@@ -28,16 +28,16 @@ namespace ProcessExtensions.Interop.Context
         {
             switch (in_callingConvention)
             {
-                case CallingConvention.Cdecl:
-                case CallingConvention.StdCall:
+                case ECallingConvention.Cdecl:
+                case ECallingConvention.StdCall:
                     (Get() as CdeclContext)?.Set(in_ip, in_isVariadicArgs, in_args);
                     break;
 
-                case CallingConvention.ThisCall:
+                case ECallingConvention.ThisCall:
                     (Get() as ThisCallContext)?.Set(in_ip, in_isVariadicArgs, in_args);
                     break;
 
-                case CallingConvention.FastCall:
+                case ECallingConvention.FastCall:
                     (Get() as FastCallContext)?.Set(in_ip, in_isVariadicArgs, in_args);
                     break;
             }
@@ -47,16 +47,16 @@ namespace ProcessExtensions.Interop.Context
         {
             switch (in_callingConvention)
             {
-                case CallingConvention.Cdecl:
-                case CallingConvention.StdCall:
+                case ECallingConvention.Cdecl:
+                case ECallingConvention.StdCall:
                     (Get() as CdeclContext)?.Clean();
                     break;
 
-                case CallingConvention.ThisCall:
+                case ECallingConvention.ThisCall:
                     (Get() as ThisCallContext)?.Clean();
                     break;
 
-                case CallingConvention.FastCall:
+                case ECallingConvention.FastCall:
                     (Get() as FastCallContext)?.Clean();
                     break;
             }

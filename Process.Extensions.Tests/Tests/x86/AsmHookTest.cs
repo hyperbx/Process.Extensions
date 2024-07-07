@@ -1,7 +1,7 @@
-﻿using ProcessExtensions.Interop;
+﻿using ProcessExtensions.Enums;
+using ProcessExtensions.Interop;
 using ProcessExtensions.Logger;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace ProcessExtensions.Tests.x86
 {
@@ -15,7 +15,7 @@ namespace ProcessExtensions.Tests.x86
         {
             _fastcallTestSumOfArgumentsAddr = Process.ToASLR(in_sr.GetProcedureAddress("fastcallTestSumOfArguments"));
 
-            fastcallTestSumOfArguments = new(Process, _fastcallTestSumOfArgumentsAddr, CallingConvention.FastCall);
+            fastcallTestSumOfArguments = new(Process, _fastcallTestSumOfArgumentsAddr, ECallingConvention.FastCall);
         }
 
         public bool fastcallTestSumOfArguments_ShouldReturnCorrectSubtraction()

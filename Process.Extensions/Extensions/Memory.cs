@@ -389,12 +389,12 @@ namespace ProcessExtensions
         /// </param>
         /// <param name="in_isPreserved">Determines whether the original code will be preserved so it can be restored using <see cref="MemoryPreserver.RestoreMemory(Process, nint)"/> later.</param>
         /// <exception cref="VerboseWin32Exception"/>
-        public static void Write(this Process in_process, nint in_address, object in_data, Type in_type, bool in_isProtected = false, bool in_isPreserved = false)
+        public static void Write(this Process in_process, nint in_address, object in_data, bool in_isProtected = false, bool in_isPreserved = false)
         {
             if (in_process.HasExited)
                 return;
 
-            var data = MemoryHelper.UnmanagedTypeToByteArray(in_data, in_type);
+            var data = MemoryHelper.UnmanagedTypeToByteArray(in_data);
 
             if (data.Length <= 0)
                 return;
@@ -429,7 +429,7 @@ namespace ProcessExtensions
             if (in_process.HasExited)
                 return;
 
-            in_process.Write(in_address, in_data, in_data.GetType(), in_isProtected, in_isPreserved);
+            in_process.Write(in_address, (object)in_data, in_isProtected, in_isPreserved);
         }
 
         /// <summary>
@@ -440,12 +440,12 @@ namespace ProcessExtensions
         /// <param name="in_type">The unmanaged type to write.</param>
         /// <returns>A pointer in the target process' memory to the value.</returns>
         /// <exception cref="VerboseWin32Exception"/>
-        public static nint Write(this Process in_process, object in_data, Type in_type)
+        public static nint Write(this Process in_process, object in_data)
         {
             if (in_process.HasExited)
                 return 0;
 
-            return in_process.WriteBytes(MemoryHelper.UnmanagedTypeToByteArray(in_data, in_type));
+            return in_process.WriteBytes(MemoryHelper.UnmanagedTypeToByteArray(in_data));
         }
 
         /// <summary>
@@ -461,7 +461,7 @@ namespace ProcessExtensions
             if (in_process.HasExited)
                 return 0;
 
-            return in_process.Write(in_data, in_data.GetType());
+            return in_process.Write((object)in_data);
         }
 
         /// <summary>

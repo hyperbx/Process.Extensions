@@ -1,11 +1,6 @@
-﻿using ProcessExtensions.Exceptions;
-using ProcessExtensions.Extensions.Internal;
-using ProcessExtensions.Helpers.Internal;
+﻿using ProcessExtensions.Enums;
 using System.Diagnostics;
 using Vanara.PInvoke;
-
-#pragma warning disable CA1416 // Validate platform compatibility
-#pragma warning disable CS9107 // Parameter is captured into the state of the enclosing type and its value is also passed to the base constructor. The value might be captured by the base class as well.
 
 namespace ProcessExtensions.Interop.Context
 {
@@ -13,32 +8,21 @@ namespace ProcessExtensions.Interop.Context
     {
         public override void Set(nint in_ip, bool in_isVariadicArgs = false, params object[] in_args)
         {
-            if (_process.Is64Bit())
+            base.Set(in_ip, in_isVariadicArgs, in_args);
+
+            if (Process.Is64Bit())
             {
                 new FastCallContext(Process, ThreadHandle).Set(in_ip, in_isVariadicArgs, in_args);
             }
             else
             {
-                var context = Kernel32Helper.GetThreadContext(_threadHandle)
-                    ?? throw new VerboseWin32Exception($"Failed to get thread context.");
+                var context = new ContextWrapper(Process, ThreadHandle);
 
-                context.Eip = (uint)in_ip;
+                context.SetGPR(EBaseRegister.RIP, in_ip);
 
                 for (int i = in_args.Length - 1; i >= 0; i--)
-                {
-                    var arg = in_args[i];
-                    var buffer = MemoryHelper.UnmanagedTypeToByteArray(arg, arg.GetType());
-
-                    context.Esp -= (uint)buffer.Length.Align(4);
-
-                    in_process.WriteBytes((nint)context.Esp, buffer);
-                }
-
-                Kernel32Helper.SetThreadContext(_threadHandle, context);
+                    context.StackWrite(in_args[i]);
             }
         }
     }
 }
-
-#pragma warning restore CS9107 // Parameter is captured into the state of the enclosing type and its value is also passed to the base constructor. The value might be captured by the base class as well.
-#pragma warning restore CA1416 // Validate platform compatibility

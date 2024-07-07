@@ -1,5 +1,5 @@
-﻿using ProcessExtensions.Exceptions;
-using ProcessExtensions.Helpers.Internal;
+﻿using ProcessExtensions.Enums;
+using ProcessExtensions.Extensions.Internal;
 using System.Diagnostics;
 using Vanara.PInvoke;
 
@@ -17,13 +17,14 @@ namespace ProcessExtensions.Interop.Context
             }
             else
             {
-                var context = Kernel32Helper.GetThreadContext(_threadHandle)
-                    ?? throw new VerboseWin32Exception($"Failed to get thread context.");
+                var context = new ContextWrapper(Process, ThreadHandle);
+
+                // Write "this" struct to the stack.
+                if (in_args[0].GetType().IsStruct())
+                    in_args[0] = context.StackWrite(in_args[0]);
 
                 // Store pointer to class in ECX.
-                context.Ecx = (uint)in_args[0];
-
-                Kernel32Helper.SetThreadContext(_threadHandle, context);
+                context.SetGPR(EBaseRegister.RCX, (uint)in_args[0]);
 
                 new CdeclContext(Process, ThreadHandle).Set(in_ip, in_isVariadicArgs, in_args.TakeLast(in_args.Length - 1).ToArray());
             }

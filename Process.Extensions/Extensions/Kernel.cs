@@ -1,4 +1,5 @@
 ﻿using ProcessExtensions.Exceptions;
+using ProcessExtensions.Helpers.Internal;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Vanara.PInvoke;
@@ -133,7 +134,26 @@ namespace ProcessExtensions
                 return 0;
 
             if (!Kernel32.DuplicateHandle(Kernel32.GetCurrentProcess(), in_handle, in_process.Handle, out var out_handle, 0, false, Kernel32.DUPLICATE_HANDLE_OPTIONS.DUPLICATE_SAME_ACCESS))
-                throw new Win32Exception($"Failed to duplicate handle ({Marshal.GetLastWin32Error()}).");
+                throw new VerboseWin32Exception($"Failed to duplicate handle.");
+
+            return out_handle;
+        }
+
+        /// <summary>
+        /// Inherits a handle.
+        /// </summary>
+        /// <param name="in_process">The target process to duplicate the handle into.</param>
+        /// <param name="in_process">The source process to duplicate the handle from.</param>
+        /// <param name="in_handle">The handle to duplicate.</param>
+        /// <returns>The value of the handle in the target process.</returns>
+        /// <exception cref="VerboseWin32Exception"/>
+        public static nint InheritHandle(this Process in_process, Process in_sourceProcess, nint in_handle)
+        {
+            if (in_process.HasExited)
+                return 0;
+
+            if (!Kernel32.DuplicateHandle(in_sourceProcess.Handle, in_handle, in_process.Handle, out var out_handle, 0, false, Kernel32.DUPLICATE_HANDLE_OPTIONS.DUPLICATE_SAME_ACCESS))
+                throw new VerboseWin32Exception($"Failed to duplicate handle.");
 
             return out_handle;
         }

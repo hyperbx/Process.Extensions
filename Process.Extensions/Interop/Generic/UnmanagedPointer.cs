@@ -11,13 +11,13 @@ namespace ProcessExtensions.Interop.Generic
     [MarshalAsRegister]
     public struct UnmanagedPointer(Process in_process, object in_data)
     {
-        public nint pData = in_process.Write(in_data, in_data.GetType());
+        public nint pData = in_process.Write(in_data);
 
         /// <summary>
         /// Determines whether this pointer is null.
         /// </summary>
         /// <returns><b>false</b> if this is a null pointer; otherwise <b>true</b>.</returns>
-        public readonly bool IsValid()
+        public bool IsValid()
         {
             return pData != 0;
         }
@@ -27,7 +27,7 @@ namespace ProcessExtensions.Interop.Generic
         /// </summary>
         /// <typeparam name="T">The unmanaged type to get.</typeparam>
         /// <param name="in_process">The target process this pointer pertains to.</param>
-        public readonly T Get<T>(Process in_process) where T : unmanaged
+        public T Get<T>(Process in_process) where T : unmanaged
         {
             if (!IsValid())
                 return default;
@@ -41,7 +41,7 @@ namespace ProcessExtensions.Interop.Generic
         /// <typeparam name="T">The unmanaged type to set.</typeparam>
         /// <param name="in_process">The target process this pointer pertains to.</param>
         /// <param name="in_data">The value to write.</param>
-        public readonly void Set<T>(Process in_process, T in_data) where T : unmanaged
+        public void Set<T>(Process in_process, T in_data) where T : unmanaged
         {
             if (!IsValid())
                 return;
@@ -53,7 +53,7 @@ namespace ProcessExtensions.Interop.Generic
         /// Frees the memory associated with this pointer.
         /// </summary>
         /// <param name="in_process">The target process this pointer pertains to.</param>
-        public readonly void Free(Process in_process)
+        public void Free(Process in_process)
         {
             in_process.Free(pData);
         }
@@ -63,7 +63,7 @@ namespace ProcessExtensions.Interop.Generic
             return in_this.IsValid();
         }
 
-        public override readonly string ToString()
+        public override string ToString()
         {
             return $"0x{((long)pData):X}";
         }

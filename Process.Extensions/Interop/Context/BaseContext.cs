@@ -20,6 +20,10 @@ namespace ProcessExtensions.Interop.Context
 
             var is64Bit = Process.Is64Bit();
 
+            var context = new ContextWrapper(Process, ThreadHandle);
+            {
+                context.AlignStackPointer();
+            }
 
             for (int i = 0; i < in_args.Length; i++)
             {

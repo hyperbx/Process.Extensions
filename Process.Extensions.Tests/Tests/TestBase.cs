@@ -18,8 +18,9 @@ namespace ProcessExtensions.Tests
 
             foreach (var test in GetTests())
             {
-                LoggerService.Log($"Running test: {test.Method.Name}...");
+                LoggerService.Log($"Test: {test.Method.Name}");
 
+                var start = DateTime.Now;
 #if !DEBUG
                 try
                 {
@@ -42,8 +43,7 @@ namespace ProcessExtensions.Tests
                     LoggerService.Error("FAIL");
                 }
 #endif
-
-                LoggerService.WriteLine();
+                LoggerService.Log($"Finished in {(DateTime.Now - start).TotalMilliseconds} ms.\n");
 
                 if (!result)
                     break;

@@ -1,8 +1,9 @@
-﻿using ProcessExtensions.Interop;
+﻿using ProcessExtensions.Extensions;
+using ProcessExtensions.Interop;
 using ProcessExtensions.Logger;
 using System.Diagnostics;
 
-namespace ProcessExtensions.Tests
+namespace ProcessExtensions.Tests.Shared
 {
     internal class SignalExitTest : TestBase
     {
@@ -22,14 +23,14 @@ namespace ProcessExtensions.Tests
 
             LoggerService.Warning("Waiting for process to exit...");
 
-            Thread.Sleep(1000);
+            Thread.Sleep(500);
 
             return Process.HasExited;
         }
 
         public override Func<bool>[] GetTests()
         {
-            LoggerService.Warning($"Exit Signal Tests (x{(Process.Is64Bit() ? "64" : "86")}) -------\n");
+            LoggerService.Warning($"Exit Signal Tests ({Process.GetArchitectureName()}) -------------\n");
 
             return [signalExit_ShouldTerminateProcess];
         }

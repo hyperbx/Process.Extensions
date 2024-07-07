@@ -13,5 +13,7 @@ void thiscallLinkTests()
 	auto _ctx = ctx.thiscallTestReturnStruct();
 
 	ctx.thiscallTestStructAsArgument(_ctx);
+	ctx.thiscallTestStructsAsArguments(_ctx, _ctx, _ctx);
 	ctx.thiscallTestStructPtrAsArgument(&_ctx);
+	ctx.thiscallTestStructPtrsAsArguments(&_ctx, &_ctx, &_ctx);
 }

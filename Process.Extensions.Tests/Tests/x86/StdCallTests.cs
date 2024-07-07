@@ -14,7 +14,9 @@ namespace ProcessExtensions.Tests.x86
         private UnmanagedProcessFunctionPointer<UnmanagedPointer, UnmanagedPointer>? stdcallTestReturnStruct;
         private UnmanagedProcessFunctionPointer<UnmanagedPointer>? stdcallTestReturnStructPtr;
         private UnmanagedProcessFunctionPointer<int, TestContext>? stdcallTestStructAsArgument;
+        private UnmanagedProcessFunctionPointer<int, TestContext, TestContext, TestContext>? stdcallTestStructsAsArguments;
         private UnmanagedProcessFunctionPointer<int, UnmanagedPointer>? stdcallTestStructPtrAsArgument;
+        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer, UnmanagedPointer, UnmanagedPointer>? stdcallTestStructPtrsAsArguments;
 
         public StdCallTests(Process in_process, SymbolResolver in_sr) : base(in_process)
         {
@@ -23,7 +25,9 @@ namespace ProcessExtensions.Tests.x86
             stdcallTestReturnStruct = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestReturnStruct")), ECallingConvention.StdCall);
             stdcallTestReturnStructPtr = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestReturnStructPtr")), ECallingConvention.StdCall);
             stdcallTestStructAsArgument = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestStructAsArgument")), ECallingConvention.StdCall);
+            stdcallTestStructsAsArguments = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestStructsAsArguments")), ECallingConvention.StdCall);
             stdcallTestStructPtrAsArgument = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestStructPtrAsArgument")), ECallingConvention.StdCall);
+            stdcallTestStructPtrsAsArguments = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("stdcallTestStructPtrsAsArguments")), ECallingConvention.StdCall);
         }
 
         public bool stdcallTestNoArguments_ShouldReturnTrue()
@@ -60,20 +64,34 @@ namespace ProcessExtensions.Tests.x86
             return stdcallTestStructAsArgument!.Invoke(new TestContext(1, 2, 3)) == 6;
         }
 
+        public bool stdcallTestStructsAsArguments_ShouldReturnCorrectSum()
+        {
+            return stdcallTestStructsAsArguments!.Invoke(new TestContext(1, 2, 3), new TestContext(1, 2, 3), new TestContext(1, 2, 3)) == 18;
+        }
+
         public bool stdcallTestStructPtrAsArgument_ShouldReturnCorrectSum()
         {
-            var in_ctx = new UnmanagedPointer(Process, new TestContext(1, 2, 3));
+            var ctx = new UnmanagedPointer(Process, new TestContext(1, 2, 3));
+            var result = stdcallTestStructPtrAsArgument!.Invoke(ctx) == 6;
 
-            var result = stdcallTestStructPtrAsArgument!.Invoke(in_ctx) == 6;
+            ctx.Free(Process);
 
-            in_ctx.Free(Process);
+            return result;
+        }
+
+        public bool stdcallTestStructPtrsAsArguments_ShouldReturnCorrectSum()
+        {
+            var ctx = new UnmanagedPointer(Process, new TestContext(1, 2, 3));
+            var result = stdcallTestStructPtrsAsArguments!.Invoke(ctx, ctx, ctx) == 18;
+
+            ctx.Free(Process);
 
             return result;
         }
 
         public override Func<bool>[] GetTests()
         {
-            LoggerService.Warning("__stdcall Tests (x86) ---------\n");
+            LoggerService.Warning("__stdcall Tests (x86) ---------------\n");
 
             return
             [
@@ -82,14 +100,16 @@ namespace ProcessExtensions.Tests.x86
                 stdcallTestReturnStruct_ShouldReturnCorrectStruct,
                 stdcallTestReturnStructPtr_ShouldReturnCorrectStruct,
                 stdcallTestStructAsArgument_ShouldReturnCorrectSum,
-                stdcallTestStructPtrAsArgument_ShouldReturnCorrectSum
+                stdcallTestStructsAsArguments_ShouldReturnCorrectSum,
+                stdcallTestStructPtrAsArgument_ShouldReturnCorrectSum,
+                stdcallTestStructPtrsAsArguments_ShouldReturnCorrectSum
             ];
         }
 
         public override void Dispose()
         {
 #if DEBUG
-            LoggerService.Warning("__stdcall Cleanup (x86) -------\n");
+            LoggerService.Warning("__stdcall Cleanup (x86) -------------\n");
 #endif
 
             stdcallTestNoArguments?.Dispose();
@@ -97,7 +117,9 @@ namespace ProcessExtensions.Tests.x86
             stdcallTestReturnStruct?.Dispose();
             stdcallTestReturnStructPtr?.Dispose();
             stdcallTestStructAsArgument?.Dispose();
+            stdcallTestStructsAsArguments?.Dispose();
             stdcallTestStructPtrAsArgument?.Dispose();
+            stdcallTestStructPtrsAsArguments?.Dispose();
 
 #if DEBUG
             LoggerService.WriteLine();

@@ -1,3 +1,5 @@
+#define WIN32_LEAN_AND_MEAN
+
 #include <iostream>
 #include <Windows.h>
 
@@ -13,6 +15,14 @@ static void signalExit()
     m_isRunning = false;
 }
 
+static void runAllTests()
+{
+    cdeclLinkTests();
+    stdcallLinkTests();
+    fastcallLinkTests();
+    thiscallLinkTests();
+}
+
 static void linkAll()
 {
     if (!m_isRunning)
@@ -20,16 +30,20 @@ static void linkAll()
 
     signalExit();
 
-    cdeclLinkTests();
-    fastcallLinkTests();
-    stdcallLinkTests();
-    thiscallLinkTests();
+    runAllTests();
 }
 
 int main()
 {
     while (m_isRunning)
+    {
+        if (GetAsyncKeyState(VK_F1) & 0x8000)
+            runAllTests();
+
         Sleep(20);
+    }
 
     linkAll();
+
+    return 0;
 }

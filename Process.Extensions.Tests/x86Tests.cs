@@ -1,6 +1,7 @@
 ﻿using ProcessExtensions.Interop;
 using ProcessExtensions.Logger;
 using ProcessExtensions.Tests;
+using ProcessExtensions.Tests.Shared;
 using ProcessExtensions.Tests.x86;
 using System.Diagnostics;
 
@@ -29,7 +30,7 @@ namespace ProcessExtensions
 
             using (var sr = new SymbolResolver(_clientPath))
             {
-                LoggerService.Warning("Initialising Tests (x86) ------\n");
+                LoggerService.Warning("Initialising Tests (x86) ------------\n");
 
                 TestBase[] tests = [];
 #if !DEBUG
@@ -43,7 +44,7 @@ namespace ProcessExtensions
                         new FastCallTests(process, sr),
                         new ThisCallTests(process, sr),
                         new AsmHookTest(process, sr),
-                        // new ModuleInjectTest(process),
+                        new ModuleInjectTest(process),
                         new SignalExitTest(process, sr)
                     ];
 #if !DEBUG
@@ -56,8 +57,9 @@ namespace ProcessExtensions
                     LoggerService.Error("FAIL\n");
                     goto Abort;
                 }
+#else
+                LoggerService.WriteLine();
 #endif
-
                 foreach (var test in tests)
                 {
                     if (!test.RunTests())
@@ -69,8 +71,9 @@ namespace ProcessExtensions
                         break;
                 }
             }
-
+#if !DEBUG
         Abort:
+#endif
             process.Kill();
 
             return result;

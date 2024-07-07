@@ -51,7 +51,7 @@ namespace ProcessExtensions.Tests.x86
 
         public override Func<bool>[] GetTests()
         {
-            LoggerService.Warning("Mid-ASM Hook Tests (x86) ------\n");
+            LoggerService.Warning("Mid-ASM Hook Tests (x86) ------------\n");
 
             return [fastcallTestSumOfArguments_ShouldReturnCorrectSubtraction];
         }
@@ -59,7 +59,7 @@ namespace ProcessExtensions.Tests.x86
         public override void Dispose()
         {
 #if DEBUG
-            LoggerService.Warning("Mid-ASM Hook Cleanup (x86) ----\n");
+            LoggerService.Warning("Mid-ASM Hook Cleanup (x86) ----------\n");
 #endif
 
             Process.RemoveAsmHook(_fastcallTestSumOfArgumentsAddr);

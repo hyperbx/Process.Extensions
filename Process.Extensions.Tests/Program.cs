@@ -6,8 +6,11 @@ namespace ProcessExtensions
     {
         public static void Main()
         {
-            LoggerService.Log("ProcessExtensions Tests\n");
-            LoggerService.Log($"Start:  {DateTime.Now:dd/MM/yyyy hh:mm:ss.fff}\n");
+            LoggerService.Log("Process.Extensions Tests\n");
+
+            var start = DateTime.Now;
+
+            LoggerService.Log($"Start:   {DateTime.Now:dd/MM/yyyy hh:mm:ss.fff tt}\n");
 
             var result = true;
 
@@ -19,14 +22,15 @@ namespace ProcessExtensions
 
             if (result)
             {
-                LoggerService.Utility("--------- TEST PASSED ---------\n");
+                LoggerService.Utility("------------ TEST PASSED ------------\n");
             }
             else
             {
-                LoggerService.Error("--------- TEST FAILED ---------\n");
+                LoggerService.Error("------------ TEST FAILED ------------\n");
             }
 
-            LoggerService.Log($"End:    {DateTime.Now:dd/MM/yyyy hh:mm:ss.fff}");
+            LoggerService.Log($"End:      {DateTime.Now:dd/MM/yyyy hh:mm:ss.fff tt}");
+            LoggerService.Log($"Duration: {(DateTime.Now - start).TotalMilliseconds} ms");
 
             Environment.Exit(result ? 0 : -1);
         }

@@ -9,10 +9,13 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Process.Extensions.Shared",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Process.Extensions.Tests", "Process.Extensions.Tests\Process.Extensions.Tests.csproj", "{FB733EFD-E42E-4DD1-9E4A-D84A155B640F}"
 	ProjectSection(ProjectDependencies) = postProject
+		{A3F25747-E265-4FDD-ADAB-38D898384571} = {A3F25747-E265-4FDD-ADAB-38D898384571}
 		{D5F36C5D-5225-4C4B-8479-4BE3CE94A6C8} = {D5F36C5D-5225-4C4B-8479-4BE3CE94A6C8}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Process.Extensions.Tests.Client", "Process.Extensions.Tests.Client\Process.Extensions.Tests.Client.vcxproj", "{D5F36C5D-5225-4C4B-8479-4BE3CE94A6C8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Process.Extensions.Tests.Client.DllExport", "Process.Extensions.Tests.Client.DllExport\Process.Extensions.Tests.Client.DllExport.vcxproj", "{A3F25747-E265-4FDD-ADAB-38D898384571}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -60,6 +63,18 @@ Global
 		{D5F36C5D-5225-4C4B-8479-4BE3CE94A6C8}.Release|x64.Build.0 = Release|x64
 		{D5F36C5D-5225-4C4B-8479-4BE3CE94A6C8}.Release|x86.ActiveCfg = Release|Win32
 		{D5F36C5D-5225-4C4B-8479-4BE3CE94A6C8}.Release|x86.Build.0 = Release|Win32
+		{A3F25747-E265-4FDD-ADAB-38D898384571}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{A3F25747-E265-4FDD-ADAB-38D898384571}.Debug|Any CPU.Build.0 = Debug|x64
+		{A3F25747-E265-4FDD-ADAB-38D898384571}.Debug|x64.ActiveCfg = Debug|x64
+		{A3F25747-E265-4FDD-ADAB-38D898384571}.Debug|x64.Build.0 = Debug|x64
+		{A3F25747-E265-4FDD-ADAB-38D898384571}.Debug|x86.ActiveCfg = Debug|Win32
+		{A3F25747-E265-4FDD-ADAB-38D898384571}.Debug|x86.Build.0 = Debug|Win32
+		{A3F25747-E265-4FDD-ADAB-38D898384571}.Release|Any CPU.ActiveCfg = Release|x64
+		{A3F25747-E265-4FDD-ADAB-38D898384571}.Release|Any CPU.Build.0 = Release|x64
+		{A3F25747-E265-4FDD-ADAB-38D898384571}.Release|x64.ActiveCfg = Release|x64
+		{A3F25747-E265-4FDD-ADAB-38D898384571}.Release|x64.Build.0 = Release|x64
+		{A3F25747-E265-4FDD-ADAB-38D898384571}.Release|x86.ActiveCfg = Release|Win32
+		{A3F25747-E265-4FDD-ADAB-38D898384571}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

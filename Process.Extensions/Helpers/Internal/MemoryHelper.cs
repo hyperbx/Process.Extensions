@@ -4,10 +4,10 @@ namespace ProcessExtensions.Helpers.Internal
 {
     internal class MemoryHelper
     {
-        public static T? ByteArrayToUnmanagedType<T>(byte[] in_data, Type in_type, bool in_isBigEndian = false)
+        public static object? ByteArrayToUnmanagedType(byte[] in_data, Type in_type, bool in_isBigEndian = false)
         {
             if (in_data == null || in_data.Length <= 0)
-                return default;
+                return null;
 
             if (in_isBigEndian)
                 in_data = in_data.Reverse().ToArray();
@@ -16,7 +16,7 @@ namespace ProcessExtensions.Helpers.Internal
 
             try
             {
-                return (T?)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), in_type);
+                return Marshal.PtrToStructure(handle.AddrOfPinnedObject(), in_type)!;
             }
             finally
             {
@@ -24,14 +24,14 @@ namespace ProcessExtensions.Helpers.Internal
             }
         }
 
-        public static T ByteArrayToUnmanagedType<T>(byte[] in_data, bool in_isBigEndian = false) where T : unmanaged
+        public static T? ByteArrayToUnmanagedType<T>(byte[] in_data, bool in_isBigEndian = false)
         {
-            return ByteArrayToUnmanagedType<T>(in_data, typeof(T), in_isBigEndian);
+            return (T?)ByteArrayToUnmanagedType(in_data, typeof(T), in_isBigEndian);
         }
 
-        public static byte[] UnmanagedTypeToByteArray(object in_structure, Type in_type, bool in_isBigEndian = false)
+        public static byte[] UnmanagedTypeToByteArray(object in_structure, bool in_isBigEndian = false)
         {
-            byte[] data = new byte[Marshal.SizeOf(in_type)];
+            byte[] data = new byte[Marshal.SizeOf(in_structure.GetType())];
 
             var handle = GCHandle.Alloc(data, GCHandleType.Pinned);
 
@@ -47,15 +47,9 @@ namespace ProcessExtensions.Helpers.Internal
             return in_isBigEndian ? data.Reverse().ToArray() : data;
         }
 
-        public static byte[] UnmanagedTypeToByteArray<T>(T in_structure, bool in_isBigEndian = false) where T : unmanaged
+        public static T UnmanagedTypeToRegisterValue<T>(object in_structure, bool in_isBigEndian = false) where T : unmanaged
         {
-            return UnmanagedTypeToByteArray(in_structure, typeof(T), in_isBigEndian);
-        }
-
-        public static T UnmanagedTypeToRegisterValue<T>(object in_structure, Type in_type, bool in_isBigEndian = false) where T : unmanaged
-        {
-            var structBuffer = UnmanagedTypeToByteArray(in_structure, in_type, in_isBigEndian);
-            var structSize = Marshal.SizeOf(in_type);
+            var structBuffer = UnmanagedTypeToByteArray(in_structure, in_isBigEndian);
 
             var unmanagedType = typeof(T);
             var unmanagedSize = Marshal.SizeOf<T>();

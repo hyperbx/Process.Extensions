@@ -1,7 +1,9 @@
 ﻿using ProcessExtensions.Enums;
 using ProcessExtensions.Exceptions;
+using ProcessExtensions.Extensions.Internal;
 using ProcessExtensions.Logger;
 using ProcessExtensions.Interop.Context;
+using ProcessExtensions.Interop.Events;
 using ProcessExtensions.Interop.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -63,6 +65,9 @@ namespace ProcessExtensions.Interop
 
         public bool IsThrowOnProcessExit { get; set; } = true;
 
+        public event SetContextEventHandler? Prefix;
+        public event GetContextEventHandler? Postfix;
+
         /// <summary>
         /// Creates a pointer to an unmanaged function in a native process.
         /// </summary>
@@ -111,6 +116,8 @@ namespace ProcessExtensions.Interop
             if (Process == null)
                 return;
 
+            var is64Bit = Process.Is64Bit();
+
             if (_eventHandle == null)
             {
                 _eventHandle = Kernel32.CreateEvent(null, true, false, null);
@@ -118,7 +125,7 @@ namespace ProcessExtensions.Interop
                 if (_eventHandle == 0)
                     throw new VerboseWin32Exception($"Failed to create event.");
 
-                if (!Process.Is64Bit())
+                if (!is64Bit)
                     _isWoW64ThreadFinishedAddr = Process.Alloc(1);
 
                 _threadHandleAddr = Process.Alloc(8);
@@ -129,7 +136,7 @@ namespace ProcessExtensions.Interop
             if (threadHandle == 0)
                 throw new VerboseWin32Exception($"Failed to create remote thread.");
 
-            if (Process.Is64Bit())
+            if (is64Bit)
                 Process.Write(_threadHandleAddr, Process.InheritHandle(threadHandle.DangerousGetHandle()));
 
             if (_wrapperAddr == 0)
@@ -160,7 +167,7 @@ namespace ProcessExtensions.Interop
                         "
                         +
                         (
-                            Process.Is64Bit()
+                            is64Bit
                                 ? $@"
                                     ; Call SetEvent to resume execution of the C# process.
                                     mov  {rcx}, {Process.InheritHandle(_eventHandle.DangerousGetHandle())}
@@ -195,16 +202,33 @@ namespace ProcessExtensions.Interop
 
             var context = new ContextFactory(Process, threadHandle, CallingConvention);
 
-            // Set remote thread context.
-            context.Set(_wrapperAddr, IsVariadicArgs, in_args);
+            if (CallingConvention != ECallingConvention.UserCall)
+            {
+                // Set remote thread context.
+                context.Set(_wrapperAddr, IsVariadicArgs, in_args);
+            }
+            else if (Prefix != null)
+            {
+                var contextWrapper = new ContextWrapper(Process, threadHandle);
+                {
+                    contextWrapper.SetGPR(EBaseRegister.RIP, _wrapperAddr);
+                }
+
+                Prefix?.Invoke(this, contextWrapper);
+            }
+            else
+            {
+                throw new NotImplementedException("Invalid context. Subscribe to the Prefix event to set the thread context when using UserCall.");
+            }
 
             // Reset 32-bit thread state.
-            if (!Process.Is64Bit())
+            if (!is64Bit)
                 Process.Write(_isWoW64ThreadFinishedAddr, false);
 
-            Kernel32.ResumeThread(threadHandle);
+            if (Kernel32.ResumeThread(threadHandle) == 0xFFFFFFFF)
+                throw new VerboseWin32Exception("Failed to resume thread.");
 
-            if (Process.Is64Bit())
+            if (is64Bit)
             {
                 var processTerminatedEventThread = new Thread
                 (
@@ -236,10 +260,21 @@ namespace ProcessExtensions.Interop
                     Thread.Sleep(20);
             }
 
-            if (IsThrowOnProcessExit && Process.HasExited)
-                throw new AggregateException("The target process has terminated unexpectedly.");
+            if (Process.HasExited)
+            {
+                if (IsThrowOnProcessExit)
+                    throw new AggregateException("The target process has terminated unexpectedly.");
+            }
+            else
+            {
+                if (Kernel32.SuspendThread(threadHandle) == 0xFFFFFFFF)
+                    throw new VerboseWin32Exception("Failed to suspend thread.");
 
-            Kernel32.TerminateThread(threadHandle, 0);
+                Postfix?.Invoke(this, new ContextWrapper(Process, threadHandle));
+
+                if (!Kernel32.TerminateThread(threadHandle, 0))
+                    throw new VerboseWin32Exception("Failed to terminate thread.");
+            }
 
             context.Clean();
 

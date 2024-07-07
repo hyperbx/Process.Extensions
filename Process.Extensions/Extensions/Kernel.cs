@@ -9,6 +9,9 @@ namespace ProcessExtensions
 {
     public static class Kernel
     {
+        private static int _procedureCacheProcessID = 0;
+        private static Dictionary<string, Dictionary<string, nint>> _procedureCache = [];
+
         /// <summary>
         /// Gets the address of a named export function.
         /// </summary>
@@ -20,6 +23,11 @@ namespace ProcessExtensions
         /// <exception cref="IndexOutOfRangeException"/>
         public static unsafe nint GetProcedureAddress(this Process in_process, string in_moduleName, string in_procedureName)
         {
+            if (_procedureCacheProcessID != in_process.Id)
+                _procedureCache.Clear();
+
+            _procedureCacheProcessID = in_process.Id;
+
             if (in_process.HasExited)
                 return 0;
 
@@ -28,9 +36,21 @@ namespace ProcessExtensions
 
             in_moduleName = in_moduleName.ToLower();
 
+            if (in_moduleName.EndsWith(".exe") || in_moduleName.EndsWith(".dll"))
+                in_moduleName = in_moduleName[..in_moduleName.LastIndexOf('.')];
+
+            // Retrieve procedure address from cache.
+            if (_procedureCache.TryGetValue(in_moduleName, out var out_moduleProcs) &&
+                out_moduleProcs.TryGetValue(in_procedureName, out var out_procPtr))
+            {
+                return out_procPtr;
+            }
+
+            in_process.Refresh();
+
             foreach (ProcessModule module in in_process.Modules)
             {
-                var name = module.ModuleName.Split('.', StringSplitOptions.RemoveEmptyEntries)[0].ToLower();
+                var name = module.ModuleName[..module.ModuleName.LastIndexOf('.')].ToLower();
 
                 if (name != in_moduleName)
                     continue;
@@ -82,6 +102,15 @@ namespace ProcessExtensions
                             throw new IndexOutOfRangeException($"Invalid redirect. Expected length: 2. Received length: {redirect.Length}.");
 
                         return GetProcedureAddress(in_process, redirect[0], redirect[1]);
+                    }
+
+                    if (_procedureCache.ContainsKey(in_moduleName))
+                    {
+                        _procedureCache[in_moduleName].Add(in_procedureName, (nint)procAddress);
+                    }
+                    else
+                    {
+                        _procedureCache.Add(in_moduleName, new() { { in_procedureName, (nint)procAddress } });
                     }
 
                     return (nint)procAddress;

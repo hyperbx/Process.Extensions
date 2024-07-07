@@ -1,12 +1,17 @@
 ﻿using Gee.External.Capstone.X86;
 using Keystone;
 using ProcessExtensions.Enums;
-using ProcessExtensions.Interop.Generic;
+using ProcessExtensions.Exceptions;
+using ProcessExtensions.Extensions;
 using ProcessExtensions.Helpers.Internal;
+using ProcessExtensions.Interop;
+using ProcessExtensions.Interop.Generic;
 using ProcessExtensions.Logger;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Text;
+using Vanara.PInvoke;
+
+#pragma warning disable CA1416 // Validate platform compatibility
 
 namespace ProcessExtensions
 {
@@ -55,6 +60,51 @@ namespace ProcessExtensions
         public static X86Instruction[] Disassemble(this Process in_process, nint in_address, int in_length)
         {
             return in_process.Disassemble(in_process.ReadBytes(in_address, in_length));
+        }
+
+        /// <summary>
+        /// Frees a DLL module resident in the target process.
+        /// </summary>
+        /// <param name="in_process">The target process to free the module from.</param>
+        /// <param name="in_moduleHandle">The remote handle to the module to free.</param>
+        /// <returns><b>true</b> if the library was freed successfully; otherwise <b>false</b>.</returns>
+        /// <exception cref="VerboseWin32Exception"/>
+        public static bool FreeLibrary(this Process in_process, Kernel32.SafeHINSTANCE? in_moduleHandle)
+        {
+            if (in_process.HasExited || in_moduleHandle == null)
+                return false;
+
+            var FreeLibrary = new UnmanagedProcessFunctionPointer<bool, nint>(
+                in_process, in_process.GetProcedureAddress("kernel32", "FreeLibrary"));
+
+            return FreeLibrary.Invoke(in_moduleHandle.DangerousGetHandle());
+        }
+
+        /// <summary>
+        /// Loads a DLL module into the target process.
+        /// </summary>
+        /// <param name="in_process">The target process to load the module into.</param>
+        /// <param name="in_modulePath">The path to the module to inject.</param>
+        /// <returns>A remote handle to the module in the target process.</returns>
+        /// <exception cref="FileNotFoundException"/>
+        /// <exception cref="VerboseWin32Exception"/>
+        public static Kernel32.SafeHINSTANCE? LoadLibrary(this Process in_process, string in_modulePath)
+        {
+            if (in_process.HasExited)
+                return null;
+
+            if (!File.Exists(in_modulePath))
+                throw new FileNotFoundException($"The DLL module could not be found: \"{in_modulePath}\"");
+
+            var LoadLibraryA = new UnmanagedProcessFunctionPointer<nint, UnmanagedString>(
+                in_process, in_process.GetProcedureAddress("kernel32", "LoadLibraryA"), ECallingConvention.Windows);
+
+            var moduleHandle = LoadLibraryA.Invoke(in_modulePath);
+
+            if (moduleHandle == 0)
+                throw new VerboseWin32Exception("Failed to load library.", in_process.GetLastWin32Error());
+
+            return new(moduleHandle, false);
         }
 
         /// <summary>
@@ -488,3 +538,5 @@ namespace ProcessExtensions
         }
     }
 }
+
+#pragma warning restore CA1416 // Validate platform compatibility

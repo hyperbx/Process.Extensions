@@ -1,24 +1,25 @@
-﻿using ProcessExtensions.Extensions.Internal;
-using ProcessExtensions.Helpers.Internal;
-using ProcessExtensions.Interop.Generic;
+﻿using ProcessExtensions.Interop.Generic;
 using System.Diagnostics;
 using Vanara.PInvoke;
 
 namespace ProcessExtensions.Interop.Context
 {
-    internal class BaseContext(Process in_process, Kernel32.SafeHTHREAD? in_threadHandle)
+    public class BaseContext(Process in_process, Kernel32.SafeHTHREAD? in_threadHandle)
     {
-        protected Process _process = in_process;
+        protected Process Process = in_process;
 
-        protected Kernel32.SafeHTHREAD? _threadHandle = in_threadHandle;
+        protected Kernel32.SafeHTHREAD? ThreadHandle = in_threadHandle;
 
-        protected List<nint> _allocations = [];
+        protected List<nint> Allocations = [];
 
-        protected List<int> _nonPrimitiveIndices = [];
+        protected List<int> BaseAllocIndices = [];
 
         public virtual void Set(nint in_ip, bool in_isVariadicArgs = false, params object[] in_args)
         {
-            _nonPrimitiveIndices.Clear();
+            BaseAllocIndices.Clear();
+
+            var is64Bit = Process.Is64Bit();
+
 
             for (int i = 0; i < in_args.Length; i++)
             {
@@ -37,24 +38,27 @@ namespace ProcessExtensions.Interop.Context
                 }
                 else if (argType.Equals(typeof(string)))
                 {
-                    in_args[i] = _process.WriteStringNullTerminated((string)arg);
+                    in_args[i] = Process.WriteStringNullTerminated((string)arg);
 
-                    _allocations.Add((nint)in_args[i]);
-                    _nonPrimitiveIndices.Add(i);
+                    Allocations.Add((nint)in_args[i]);
+
+                    // Strings are always passed on the stack in 32-bit.
+                    if (!is64Bit)
+                        BaseAllocIndices.Add(i);
                 }
 
                 // Transform pointer into correct width.
                 if (in_args[i].GetType().Equals(typeof(nint)))
                 {
-                    var ptr64 = ((nint)in_args[i]).ToInt64();
+                    var ptr = ((nint)in_args[i]).ToInt64();
 
-                    if (_process.Is64Bit())
+                    if (is64Bit)
                     {
-                        in_args[i] = (ulong)Convert.ToUInt64(ptr64);
+                        in_args[i] = (ulong)Convert.ToUInt64(ptr);
                     }
                     else
                     {
-                        in_args[i] = (uint)Convert.ToUInt32(ptr64);
+                        in_args[i] = (uint)Convert.ToUInt32(ptr);
                     }
                 }
             }
@@ -62,11 +66,11 @@ namespace ProcessExtensions.Interop.Context
 
         public virtual void Clean()
         {
-            foreach (var addr in _allocations)
-                _process.Free(addr);
+            foreach (var addr in Allocations)
+                Process.Free(addr);
 
-            _allocations.Clear();
-            _nonPrimitiveIndices.Clear();
+            Allocations.Clear();
+            BaseAllocIndices.Clear();
         }
     }
 }

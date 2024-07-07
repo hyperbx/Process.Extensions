@@ -9,13 +9,13 @@ using Vanara.PInvoke;
 
 namespace ProcessExtensions.Interop.Context
 {
-    internal class CdeclContext(Process in_process, Kernel32.SafeHTHREAD? in_threadHandle) : BaseContext(in_process, in_threadHandle)
+    public class CdeclContext(Process in_process, Kernel32.SafeHTHREAD? in_threadHandle) : BaseContext(in_process, in_threadHandle)
     {
         public override void Set(nint in_ip, bool in_isVariadicArgs = false, params object[] in_args)
         {
             if (_process.Is64Bit())
             {
-                new FastCallContext(_process, _threadHandle).Set(in_ip, in_isVariadicArgs, in_args);
+                new FastCallContext(Process, ThreadHandle).Set(in_ip, in_isVariadicArgs, in_args);
             }
             else
             {

@@ -9,7 +9,7 @@ using Vanara.PInvoke;
 
 namespace ProcessExtensions.Interop.Context
 {
-    internal class FastCallContext(Process in_process, Kernel32.SafeHTHREAD? in_threadHandle) : BaseContext(in_process, in_threadHandle)
+    public class FastCallContext(Process in_process, Kernel32.SafeHTHREAD? in_threadHandle) : BaseContext(in_process, in_threadHandle)
     {
         public override void Set(nint in_ip, bool in_isVariadicArgs = false, params object[] in_args)
         {

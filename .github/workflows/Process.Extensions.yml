@@ -53,7 +53,7 @@ jobs:
     # Builds Process.Extensions using the PowerShell script.
     - name: Build and Test Process.Extensions
       working-directory: ${{github.workspace}}
-      run: ./Build.ps1 -Clean -CommitID ${{github.sha}} -Configuration ${{matrix.configuration}} -Version ${{env.VERSION_RESOLVE}}
+      run: ./Build.ps1 -Clean -Test -CommitID ${{github.sha}} -Configuration ${{matrix.configuration}} -Version ${{env.VERSION_RESOLVE}}
         
     # Uploads the compiled Process.Extensions artifacts for 'win-x64'.
     - name: Upload Process.Extensions Artifacts for Windows (x64)

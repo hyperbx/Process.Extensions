@@ -13,6 +13,15 @@ using Vanara.PInvoke;
 
 namespace ProcessExtensions.Interop.Context
 {
+    /// <summary>
+    /// A wrapper for <see cref="Kernel32.CONTEXT"/> and <see cref="Kernel32.CONTEXT64"/>,
+    /// allowing changes to both depending on the architecture of the target process.
+    /// </summary>
+    /// <param name="in_process">The target process to manipulate the context of.</param>
+    /// <param name="in_threadHandle">
+    ///     The remote thread to manipulate the context of.
+    ///     <para>The thread must be suspended before changing the context.</para>
+    /// </param>
     public class ContextWrapper(Process in_process, Kernel32.SafeHTHREAD? in_threadHandle)
     {
         public Process Process { get; } = in_process;

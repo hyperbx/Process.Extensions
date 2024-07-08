@@ -166,6 +166,14 @@ namespace ProcessExtensions.Interop
                             {returnValueInstr}
                         "
                         +
+#if DEBUG
+                        $@"
+                            ; Get last Win32 error in debug builds.
+                            mov  {rax}, {Process.GetProcedureAddress("kernel32", "GetLastError")}
+                            call {rax}
+                        "
+                        +
+#endif
                         (
                             is64Bit
                                 ? $@"

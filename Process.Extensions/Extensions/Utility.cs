@@ -1,6 +1,4 @@
-﻿using ProcessExtensions.Enums;
-using ProcessExtensions.Interop;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace ProcessExtensions.Extensions
 {
@@ -21,22 +19,6 @@ namespace ProcessExtensions.Extensions
                     ? "x64"
                     : "x86-64"
                 : "x86";
-        }
-
-        /// <summary>
-        /// Gets the last Win32 error code reported by the target process.
-        /// </summary>
-        /// <param name="in_process">The target process to get the error code from.</param>
-        public static int GetLastWin32Error(this Process in_process)
-        {
-            var GetLastError = new UnmanagedProcessFunctionPointer<int>(in_process,
-                in_process.GetProcedureAddress("kernel32", "GetLastError"), ECallingConvention.Windows);
-
-            var result = GetLastError.Invoke();
-
-            GetLastError.Dispose();
-
-            return result;
         }
 
         /// <summary>

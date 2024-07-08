@@ -568,7 +568,7 @@ namespace ProcessExtensions.Interop.Context
             ThrowIfThreadNotSuspended();
 
             // Allocate aligned stack memory for object.
-            var rsp = SetStackPointer(-in_data.Length.Align(Process.GetPointerSize()) + in_offset);
+            var rsp = SetStackPointer(-(in_data.Length.Align(Process.GetPointerSize()) + in_offset));
 
             Process.WriteBytes(rsp, in_data);
 

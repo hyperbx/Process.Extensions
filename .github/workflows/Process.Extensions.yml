@@ -1,0 +1,63 @@
+name: Process.Extensions
+
+on:
+  push:
+    branches: [ main ]
+    
+env:
+  VERSION: "1.0"
+  PROFILE_WIN_64: win-x64
+  SOLUTION_FILE: Process.Extensions.sln
+  NUGET_SOURCE: https://api.nuget.org/v3/index.json
+
+jobs:
+
+  build:
+
+    # Use the current configuration as the job name.
+    name: ${{matrix.configuration}}
+
+    # Use the 'windows-2022' image for CI.
+    runs-on: windows-2022
+
+    # Use the following configurations for building.
+    strategy:
+      matrix:
+        configuration: [ Debug, Release ]
+        
+    steps:
+
+    # Downloads the latest Git repository for Process.Extensions.
+    - name: Clone Process.Extensions
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    # Installs the required SDKs for .NET.
+    - name: Install .NET SDK
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 8.0.x
+
+    # Restores the NuGet packages from the solution for all projects.
+    - name: Restore NuGet Packages
+      working-directory: ${{github.workspace}}
+      run: nuget restore ${{env.SOLUTION_FILE}}
+      
+    # Patches the version number using the last 'Windows' workflow run number and the latest 'Process.Extensions' workflow run number.
+    - name: Patch Version Number
+      run: |
+        $version = "${{env.VERSION}}." + ${{github.run_number}}
+        echo "VERSION_RESOLVE=$version" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+        
+    # Builds Process.Extensions using the PowerShell script.
+    - name: Build and Test Process.Extensions
+      working-directory: ${{github.workspace}}
+      run: ./Build.ps1 -Clean -CommitID ${{github.sha}} -Configuration ${{matrix.configuration}} -Version ${{env.VERSION_RESOLVE}}
+        
+    # Uploads the compiled Process.Extensions artifacts for 'win-x64'.
+    - name: Upload Process.Extensions Artifacts for Windows (x64)
+      uses: actions/upload-artifact@v2
+      with:
+        name: Process.Extensions-${{matrix.configuration}}-${{env.PROFILE_WIN_64}}
+        path: ${{github.workspace}}\Process.Extensions\bin\${{matrix.configuration}}\net8.0\

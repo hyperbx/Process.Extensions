@@ -63,21 +63,24 @@ namespace ProcessExtensions
         }
 
         /// <summary>
-        /// Frees a DLL module resident in the target process.
+        /// Gets the handle to a remote module loaded in the target process.
         /// </summary>
-        /// <param name="in_process">The target process to free the module from.</param>
-        /// <param name="in_moduleHandle">The remote handle to the module to free.</param>
-        /// <returns><b>true</b> if the library was freed successfully; otherwise <b>false</b>.</returns>
-        /// <exception cref="VerboseWin32Exception"/>
-        public static bool FreeLibrary(this Process in_process, Kernel32.SafeHINSTANCE? in_moduleHandle)
+        /// <param name="in_process">The target process to get the module handle from.</param>
+        /// <param name="in_moduleName">The name of the module to get the handle to.</param>
+        /// <returns>The handle of the requested module.</returns>
+        public static Kernel32.SafeHINSTANCE? GetModuleHandle(this Process in_process, string in_moduleName)
         {
-            if (in_process.HasExited || in_moduleHandle == null)
-                return false;
+            if (in_process.HasExited)
+                return null;
 
-            var FreeLibrary = new UnmanagedProcessFunctionPointer<bool, nint>(
-                in_process, in_process.GetProcedureAddress("kernel32", "FreeLibrary"));
+            ArgumentException.ThrowIfNullOrEmpty(in_moduleName);
 
-            return FreeLibrary.Invoke(in_moduleHandle.DangerousGetHandle());
+            var GetModuleHandleA = new UnmanagedProcessFunctionPointer<nint, UnmanagedString>(
+                in_process, in_process.GetProcedureAddress("kernel32", "GetModuleHandleA"));
+
+            var moduleHandle = GetModuleHandleA.Invoke(in_moduleName);
+
+            return moduleHandle == 0 ? null : new(moduleHandle, false);
         }
 
         /// <summary>
@@ -88,23 +91,24 @@ namespace ProcessExtensions
         /// <returns>A remote handle to the module in the target process.</returns>
         /// <exception cref="FileNotFoundException"/>
         /// <exception cref="VerboseWin32Exception"/>
-        public static Kernel32.SafeHINSTANCE? LoadLibrary(this Process in_process, string in_modulePath)
+        public static bool LoadLibrary(this Process in_process, string in_modulePath, bool in_isThrowIfModuleAlreadyLoaded = true)
         {
             if (in_process.HasExited)
-                return null;
+                return false;
 
             if (!File.Exists(in_modulePath))
                 throw new FileNotFoundException($"The DLL module could not be found: \"{in_modulePath}\"");
 
+            if (in_isThrowIfModuleAlreadyLoaded && in_process.GetModuleHandle(Path.GetFileName(in_modulePath)) != null)
+                throw new FileLoadException("The DLL module is already loaded.");
+
             var LoadLibraryA = new UnmanagedProcessFunctionPointer<nint, UnmanagedString>(
                 in_process, in_process.GetProcedureAddress("kernel32", "LoadLibraryA"), ECallingConvention.Windows);
 
+            // TODO: return this for a FreeLibrary method.
             var moduleHandle = LoadLibraryA.Invoke(in_modulePath);
 
-            if (moduleHandle == 0)
-                throw new VerboseWin32Exception("Failed to load library.", in_process.GetLastWin32Error());
-
-            return new(moduleHandle, false);
+            return moduleHandle != 0;
         }
 
         /// <summary>

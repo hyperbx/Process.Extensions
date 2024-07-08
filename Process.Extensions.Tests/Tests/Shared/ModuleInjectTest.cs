@@ -1,9 +1,9 @@
 ﻿using ProcessExtensions.Enums;
+using ProcessExtensions.Exceptions;
 using ProcessExtensions.Extensions;
 using ProcessExtensions.Interop;
 using ProcessExtensions.Logger;
 using System.Diagnostics;
-using Vanara.PInvoke;
 
 namespace ProcessExtensions.Tests.Shared
 {
@@ -17,8 +17,6 @@ namespace ProcessExtensions.Tests.Shared
 #endif
         "Process.Extensions.Tests.Client.DllExport.dll";
 
-        private Kernel32.SafeHINSTANCE? _moduleHandle;
-
         private UnmanagedProcessFunctionPointer<int, int, int, int> dllexportTestSumOfArguments;
 
         public ModuleInjectTest(Process in_process) : base(in_process)
@@ -26,7 +24,8 @@ namespace ProcessExtensions.Tests.Shared
             var modulePath = string.Format(_modulePath, Process.Is64Bit() ? "x64" : "Win32");
             var moduleName = Path.GetFileName(modulePath);
 
-            _moduleHandle = in_process.LoadLibrary(Path.GetFullPath(modulePath));
+            if (!in_process.LoadLibrary(Path.GetFullPath(modulePath)))
+                throw new VerboseWin32Exception("Failed to load library.");
 
             dllexportTestSumOfArguments = new(in_process, in_process.GetProcedureAddress(moduleName, "dllexportTestSumOfArguments"), ECallingConvention.Cdecl);
         }
@@ -48,9 +47,6 @@ namespace ProcessExtensions.Tests.Shared
 #if DEBUG
             LoggerService.Warning($"DLL Injection Cleanup ({Process.GetArchitectureName()}) ---------\n");
 #endif
-
-            Process?.FreeLibrary(_moduleHandle);
-            _moduleHandle?.Close();
 
             dllexportTestSumOfArguments?.Dispose();
 

@@ -239,7 +239,7 @@ namespace ProcessExtensions.Interop
 
                         /* Resume main thread execution if the target
                            process was terminated unexpectedly. */
-                        if (Process.HasExited)
+                        if (Process.HasExited && _eventHandle != null)
                             Kernel32.SetEvent(_eventHandle);
 
                         _isEventSignaled = false;

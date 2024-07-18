@@ -13,10 +13,10 @@
     <Description>A utility library for manipulating memory in external Windows processes.</Description>
     <PackageProjectUrl>https://github.com/hyperbx/Process.Extensions</PackageProjectUrl>
     <PackageTags>hooks;memory;assembler;disassembler;processes;win32;wow64</PackageTags>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Icon.png</PackageIcon>
     <ApplicationIcon>Resources\Icons\Icon.ico</ApplicationIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>

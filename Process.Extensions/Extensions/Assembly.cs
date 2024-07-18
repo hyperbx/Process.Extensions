@@ -180,7 +180,7 @@ namespace ProcessExtensions
         /// <param name="in_code">The x86-64 assembly code to assemble.</param>
         /// <param name="in_address">The address to start the hook from.</param>
         /// <param name="in_parameter">The method used to start the hook.</param>
-        /// <param name="in_isPreserved">Determines whether the original code will be preserved so it can be restored using <see cref="MemoryPreserver.RestoreMemory(Process, nint)"/> later.</param>
+        /// <param name="in_isPreserved">Determines whether the original code will be preserved so it can be restored using <see cref="MemoryPreserver.RestoreMemory(Process, nint, bool)"/> later.</param>
         public static void WriteAsmHook(this Process in_process, string in_code, nint in_address, EHookParameter in_parameter = EHookParameter.Jump, bool in_isPreserved = true)
         {
             if (in_process.HasExited || string.IsNullOrEmpty(in_code) || in_address == 0)
@@ -331,7 +331,7 @@ namespace ProcessExtensions
         /// <param name="in_process">The target process to write to.</param>
         /// <param name="in_address">The address to write the instruction.</param>
         /// <param name="in_count">The amount of instructions to write.</param>
-        /// <param name="in_isPreserved">Determines whether the original code will be preserved so it can be restored using <see cref="MemoryPreserver.RestoreMemory(Process, nint)"/> later.</param>
+        /// <param name="in_isPreserved">Determines whether the original code will be preserved so it can be restored using <see cref="MemoryPreserver.RestoreMemory(Process, nint, bool)"/> later.</param>
         public static void WriteNop(this Process in_process, nint in_address, int in_count = 1, bool in_isPreserved = true)
         {
             if (in_process.HasExited || in_address == 0)

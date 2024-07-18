@@ -16,6 +16,7 @@
     <PackageIcon>Icon.png</PackageIcon>
     <ApplicationIcon>Resources\Icons\Icon.ico</ApplicationIcon>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

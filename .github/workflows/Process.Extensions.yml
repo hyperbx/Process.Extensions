@@ -64,17 +64,11 @@ jobs:
         path: ${{github.workspace}}\Process.Extensions\bin\${{matrix.configuration}}\net8.0\
 
   publish:
-
-    # Use the current configuration as the job name.
-    name: ${{matrix.configuration}}
+  
+    name: Publish
 
     # Use the 'windows-2022' image for CI.
     runs-on: windows-2022
-
-    # Use the following configurations for building.
-    strategy:
-      matrix:
-        configuration: [ Debug, Release ]
         
     steps:
 

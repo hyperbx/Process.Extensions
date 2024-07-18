@@ -98,7 +98,7 @@ jobs:
     # Builds Process.Extensions using the PowerShell script.
     - name: Build and Test Process.Extensions
       working-directory: ${{github.workspace}}
-      run: ./Build.ps1 -Clean -Test -CommitID ${{github.sha}} -Configuration ${{matrix.configuration}} -Version ${{env.VERSION_RESOLVE}}
+      run: ./Build.ps1 -Clean -Test -CommitID ${{github.sha}} -Configuration Release -Version ${{env.VERSION_RESOLVE}}
 
     # Builds Process.Extensions and packs it into a NuGet package.
     - name: Create NuGet Package

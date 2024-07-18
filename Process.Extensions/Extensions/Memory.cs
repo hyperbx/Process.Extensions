@@ -439,6 +439,31 @@ namespace ProcessExtensions
         }
 
         /// <summary>
+        /// Writes an array of objects to the target process' memory at a new location.
+        /// </summary>
+        /// <param name="in_process">The target process to write to.</param>
+        /// <param name="in_data">The objects to write.</param>
+        /// <returns>A pointer in the target process' memory to the array.</returns>
+        /// <exception cref="VerboseWin32Exception"/>
+        public static nint Write(this Process in_process, object[] in_data)
+        {
+            if (in_process.HasExited || in_data == null)
+                return 0;
+
+            nint result = 0;
+
+            foreach (var obj in in_data)
+            {
+                var addr = in_process.Write(obj);
+
+                if (result == 0)
+                    result = addr;
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Writes an unmanaged type to the target process' memory at a new location.
         /// </summary>
         /// <typeparam name="T">The unmanaged type to write.</typeparam>
@@ -452,6 +477,21 @@ namespace ProcessExtensions
                 return 0;
 
             return in_process.Write((object)in_data);
+        }
+
+        /// <summary>
+        /// Writes an array of unmanaged types to the target process' memory at a new location.
+        /// </summary>
+        /// <param name="in_process">The target process to write to.</param>
+        /// <param name="in_data">The unmanaged values to write.</param>
+        /// <returns>A pointer in the target process' memory to the array.</returns>
+        /// <exception cref="VerboseWin32Exception"/>
+        public static nint Write<T>(this Process in_process, T[] in_data) where T : unmanaged
+        {
+            if (in_process.HasExited || in_data == null)
+                return 0;
+
+            return in_process.Write((in_data as object[])!);
         }
 
         /// <summary>

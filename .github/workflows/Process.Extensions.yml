@@ -94,16 +94,16 @@ jobs:
       run: |
         $version = "${{env.VERSION}}." + ${{github.run_number}}
         echo "VERSION_RESOLVE=$version" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
-
-    # Patches the assembly information stored in 'Process.Extensions.csproj' to use the current workflow version.
-    - name: Patch Version Information
-      run: |
-        ./.github/workflows/Patch-Version.ps1 -ProjectPath "${{env.PE_PROJECT}}" -Version ${{env.VERSION_RESOLVE}} -CommitID ${{github.sha}}
         
     # Builds Process.Extensions using the PowerShell script.
     - name: Build and Test Process.Extensions
       working-directory: ${{github.workspace}}
       run: ./Build.ps1 -Clean -Test -CommitID ${{github.sha}} -Configuration Release -Version ${{env.VERSION_RESOLVE}}
+
+    # Patches the assembly information stored in 'Process.Extensions.csproj' to use the current workflow version.
+    - name: Patch Version Information
+      run: |
+        ./.github/workflows/Patch-Version.ps1 -ProjectPath "${{env.PE_PROJECT}}" -Version ${{env.VERSION_RESOLVE}} -CommitID ${{github.sha}}
 
     # Builds Process.Extensions and packs it into a NuGet package.
     - name: Create NuGet Package

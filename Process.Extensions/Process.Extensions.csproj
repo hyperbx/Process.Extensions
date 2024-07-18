@@ -8,12 +8,51 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>$(MSBuildProjectName.Replace(" ", "_").Replace(".", ""))</RootNamespace>
+    <Title>$(AssemblyName)</Title>
+    <Authors>Hyper</Authors>
+    <Description>A utility library for manipulating memory in external Windows processes.</Description>
+    <PackageProjectUrl>https://github.com/hyperbx/Process.Extensions</PackageProjectUrl>
+    <PackageTags>hooks;memory;assembler;disassembler;processes;win32;wow64</PackageTags>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageIcon>Icon.png</PackageIcon>
+    <ApplicationIcon>Resources\Icons\Icon.ico</ApplicationIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\Icons\Icon.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\Icons\Icon.ico" />
+    <Content Include="Resources\Icons\Icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Gee.External.Capstone" Version="2.3.0" />
     <PackageReference Include="keystoneengine.csharp" Version="0.9.1.1" />
     <PackageReference Include="Vanara.PInvoke.Kernel32" Version="4.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Resources\Icons\q.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
   <Import Project="..\Process.Extensions.Shared\Process.Extensions.Shared.projitems" Label="Shared" />

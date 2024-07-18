@@ -8,6 +8,7 @@ env:
   VERSION: "1.0"
   PROFILE_WIN_64: win-x64
   SOLUTION_FILE: Process.Extensions.sln
+  PE_PROJECT: ${{github.workspace}}\Process.Extensions\Process.Extensions.csproj
   NUGET_SOURCE: https://api.nuget.org/v3/index.json
 
 jobs:
@@ -61,3 +62,49 @@ jobs:
       with:
         name: Process.Extensions-${{matrix.configuration}}-${{env.PROFILE_WIN_64}}
         path: ${{github.workspace}}\Process.Extensions\bin\${{matrix.configuration}}\net8.0\
+
+  publish:
+
+    # Use the current configuration as the job name.
+    name: ${{matrix.configuration}}
+
+    # Use the 'windows-2022' image for CI.
+    runs-on: windows-2022
+
+    # Use the following configurations for building.
+    strategy:
+      matrix:
+        configuration: [ Debug, Release ]
+        
+    steps:
+
+    # Downloads the latest Git repository for Process.Extensions.
+    - name: Clone Process.Extensions
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    # Installs the required SDKs for .NET.
+    - name: Install .NET SDK
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 8.0.x
+
+    # Restores the NuGet packages from the solution for all projects.
+    - name: Restore NuGet Packages
+      working-directory: ${{github.workspace}}
+      run: nuget restore ${{env.SOLUTION_FILE}}
+      
+    # Patches the version number using the last 'Windows' workflow run number and the latest 'Process.Extensions' workflow run number.
+    - name: Patch Version Number
+      run: |
+        $version = "${{env.VERSION}}." + ${{github.run_number}}
+        echo "VERSION_RESOLVE=$version" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+
+    # Builds Process.Extensions and packs it into a NuGet package.
+    - name: Create NuGet Package
+      run: dotnet pack "${{env.PE_PROJECT}}" /p:Configuration=Release
+
+    # Publishes the compiled package to NuGet.
+    - name: Publish to NuGet
+      run: dotnet nuget push "${{github.workspace}}\Process.Extensions\bin\Release\Process.Extensions.${{env.VERSION_RESOLVE}}.nupkg" -k ${{secrets.NUGET_KEY}} -s ${{env.NUGET_SOURCE}}

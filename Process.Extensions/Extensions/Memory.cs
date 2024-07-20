@@ -367,11 +367,12 @@ namespace ProcessExtensions
         }
 
         /// <summary>
-        /// Writes an object to the target process' memory.
+        /// Writes an unmanaged type to the target process' memory.
         /// </summary>
+        /// <typeparam name="T">The unmanaged type to write.</typeparam>
         /// <param name="in_process">The target process to write to.</param>
         /// <param name="in_address">The remote address to write to.</param>
-        /// <param name="in_data">The object to write.</param>
+        /// <param name="in_data">The unmanaged value to write.</param>
         /// <param name="in_isProtected">
         ///     Determines whether the location being written to is protected and should be overridden.
         ///     <para>If the location is not at least <see cref="Kernel32.MEM_PROTECTION.PAGE_READWRITE"/>, this should be set to <c>true</c>.</para>
@@ -380,7 +381,7 @@ namespace ProcessExtensions
         /// </param>
         /// <param name="in_isPreserved">Determines whether the original code will be preserved so it can be restored using <see cref="MemoryPreserver.RestoreMemory(Process, nint, bool)"/> later.</param>
         /// <exception cref="VerboseWin32Exception"/>
-        public static void Write(this Process in_process, nint in_address, object in_data, bool in_isProtected = false, bool in_isPreserved = false)
+        public static void Write<T>(this Process in_process, nint in_address, T in_data, bool in_isProtected = false, bool in_isPreserved = false) where T : unmanaged
         {
             if (in_process.HasExited)
                 return;
@@ -401,36 +402,14 @@ namespace ProcessExtensions
         }
 
         /// <summary>
-        /// Writes an unmanaged type to the target process' memory.
+        /// Writes an unmanaged type to the target process' memory at a new location.
         /// </summary>
         /// <typeparam name="T">The unmanaged type to write.</typeparam>
         /// <param name="in_process">The target process to write to.</param>
-        /// <param name="in_address">The remote address to write to.</param>
         /// <param name="in_data">The unmanaged value to write.</param>
-        /// <param name="in_isProtected">
-        ///     Determines whether the location being written to is protected and should be overridden.
-        ///     <para>If the location is not at least <see cref="Kernel32.MEM_PROTECTION.PAGE_READWRITE"/>, this should be set to <c>true</c>.</para>
-        ///     <para>When writing bytecode into memory, <see cref="Kernel32.MEM_PROTECTION.PAGE_EXECUTE_READWRITE"/> is required, which should also yield this argument being set to <c>true</c>.</para>
-        ///     <para>Please verify the page protection of <paramref name="in_address"/> using an external debugger.</para>
-        /// </param>
-        /// <param name="in_isPreserved">Determines whether the original code will be preserved so it can be restored using <see cref="MemoryPreserver.RestoreMemory(Process, nint, bool)"/> later.</param>
-        /// <exception cref="VerboseWin32Exception"/>
-        public static void Write<T>(this Process in_process, nint in_address, T in_data, bool in_isProtected = false, bool in_isPreserved = false) where T : unmanaged
-        {
-            if (in_process.HasExited)
-                return;
-
-            in_process.Write(in_address, (object)in_data, in_isProtected, in_isPreserved);
-        }
-
-        /// <summary>
-        /// Writes an object to the target process' memory at a new location.
-        /// </summary>
-        /// <param name="in_process">The target process to write to.</param>
-        /// <param name="in_data">The object to write.</param>
         /// <returns>A pointer in the target process' memory to the value.</returns>
         /// <exception cref="VerboseWin32Exception"/>
-        public static nint Write(this Process in_process, object in_data)
+        public static nint Write<T>(this Process in_process, T in_data) where T : unmanaged
         {
             if (in_process.HasExited)
                 return 0;
@@ -439,13 +418,13 @@ namespace ProcessExtensions
         }
 
         /// <summary>
-        /// Writes an array of objects to the target process' memory at a new location.
+        /// Writes an array of unmanaged types to the target process' memory at a new location.
         /// </summary>
         /// <param name="in_process">The target process to write to.</param>
-        /// <param name="in_data">The objects to write.</param>
+        /// <param name="in_data">The unmanaged values to write.</param>
         /// <returns>A pointer in the target process' memory to the array.</returns>
         /// <exception cref="VerboseWin32Exception"/>
-        public static nint Write(this Process in_process, object[] in_data)
+        public static nint Write<T>(this Process in_process, T[] in_data) where T : unmanaged
         {
             if (in_process.HasExited || in_data == null)
                 return 0;
@@ -461,37 +440,6 @@ namespace ProcessExtensions
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Writes an unmanaged type to the target process' memory at a new location.
-        /// </summary>
-        /// <typeparam name="T">The unmanaged type to write.</typeparam>
-        /// <param name="in_process">The target process to write to.</param>
-        /// <param name="in_data">The unmanaged value to write.</param>
-        /// <returns>A pointer in the target process' memory to the value.</returns>
-        /// <exception cref="VerboseWin32Exception"/>
-        public static nint Write<T>(this Process in_process, T in_data) where T : unmanaged
-        {
-            if (in_process.HasExited)
-                return 0;
-
-            return in_process.Write((object)in_data);
-        }
-
-        /// <summary>
-        /// Writes an array of unmanaged types to the target process' memory at a new location.
-        /// </summary>
-        /// <param name="in_process">The target process to write to.</param>
-        /// <param name="in_data">The unmanaged values to write.</param>
-        /// <returns>A pointer in the target process' memory to the array.</returns>
-        /// <exception cref="VerboseWin32Exception"/>
-        public static nint Write<T>(this Process in_process, T[] in_data) where T : unmanaged
-        {
-            if (in_process.HasExited || in_data == null)
-                return 0;
-
-            return in_process.Write((in_data as object[])!);
         }
 
         /// <summary>

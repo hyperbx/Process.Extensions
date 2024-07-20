@@ -32,7 +32,7 @@ namespace ProcessExtensions
             LoggerService.Log($"End:      {DateTime.Now:dd/MM/yyyy hh:mm:ss.fff tt}");
             LoggerService.Log($"Duration: {(DateTime.Now - start).TotalMilliseconds} ms");
 
-            Environment.Exit(result ? 0 : -1);
+            Environment.ExitCode = result ? 0 : -1;
         }
     }
 }

@@ -439,31 +439,6 @@ namespace ProcessExtensions
         }
 
         /// <summary>
-        /// Writes an array of objects to the target process' memory at a new location.
-        /// </summary>
-        /// <param name="in_process">The target process to write to.</param>
-        /// <param name="in_data">The objects to write.</param>
-        /// <returns>A pointer in the target process' memory to the array.</returns>
-        /// <exception cref="VerboseWin32Exception"/>
-        public static nint WriteArray(this Process in_process, object[] in_data)
-        {
-            if (in_process.HasExited || in_data == null)
-                return 0;
-
-            nint result = 0;
-
-            foreach (var obj in in_data)
-            {
-                var addr = in_process.Write(obj);
-
-                if (result == 0)
-                    result = addr;
-            }
-
-            return result;
-        }
-
-        /// <summary>
         /// Writes an unmanaged type to the target process' memory at a new location.
         /// </summary>
         /// <typeparam name="T">The unmanaged type to write.</typeparam>
@@ -486,12 +461,18 @@ namespace ProcessExtensions
         /// <param name="in_data">The unmanaged values to write.</param>
         /// <returns>A pointer in the target process' memory to the array.</returns>
         /// <exception cref="VerboseWin32Exception"/>
-        public static nint WriteArray<T>(this Process in_process, T[] in_data) where T : unmanaged
+        public static nint Write<T>(this Process in_process, T[] in_data) where T : unmanaged
         {
             if (in_process.HasExited || in_data == null)
                 return 0;
 
-            return in_process.WriteArray((in_data as object[])!);
+            var size = Marshal.SizeOf<T>();
+            var result = in_process.Alloc(size * in_data.Length);
+
+            for (int i = 0; i < in_data.Length; i++)
+                in_process.Write(result + (i * size), in_data[i]);
+
+            return result;
         }
 
         /// <summary>

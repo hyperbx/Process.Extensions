@@ -128,4 +128,16 @@ if (![System.IO.File]::Exists($testProgram))
     exit
 }
 
-Start-Process -FilePath "${testProgram}" -WorkingDirectory "${testProgramDir}" -NoNewWindow -Wait
+$process = Start-Process -FilePath "${testProgram}" -WorkingDirectory "${testProgramDir}" -NoNewWindow -PassThru -Wait
+$exitCode = $process.ExitCode
+
+echo ""
+
+if ($exitCode -eq 0)
+{
+    echo "Tests completed successfully."
+    exit 0
+}
+
+echo "Tests failed with exit code: ${exitCode}"
+exit $exitCode

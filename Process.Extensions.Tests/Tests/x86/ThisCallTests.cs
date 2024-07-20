@@ -9,21 +9,21 @@ namespace ProcessExtensions.Tests.x86
 {
     internal class ThisCallTests : TestBase
     {
-        private UnmanagedPointer<TestContext>? _this;
+        private UnmanagedPointer? _this;
 
-        private UnmanagedProcessFunctionPointer<byte, UnmanagedPointer<TestContext>>? thiscallTestNoArguments;
-        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer<TestContext>>? thiscallTestSumOfFields;
-        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer<TestContext>, int, int, int>? thiscallTestSumOfFieldsAndArguments;
-        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer<TestContext>, int, int, int>? thiscallTestSumOfFieldsAndArgumentsNested;
-        private UnmanagedProcessFunctionPointer<UnmanagedPointer<TestContext>, UnmanagedPointer<TestContext>>? thiscallTestReturnStruct;
-        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer<TestContext>, TestContext>? thiscallTestStructAsArgument;
-        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer<TestContext>, TestContext, TestContext, TestContext>? thiscallTestStructsAsArguments;
-        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer<TestContext>, UnmanagedPointer<TestContext>>? thiscallTestStructPtrAsArgument;
-        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer<TestContext>, UnmanagedPointer<TestContext>, UnmanagedPointer<TestContext>, UnmanagedPointer<TestContext>>? thiscallTestStructPtrsAsArguments;
+        private UnmanagedProcessFunctionPointer<byte, UnmanagedPointer>? thiscallTestNoArguments;
+        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer>? thiscallTestSumOfFields;
+        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer, int, int, int>? thiscallTestSumOfFieldsAndArguments;
+        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer, int, int, int>? thiscallTestSumOfFieldsAndArgumentsNested;
+        private UnmanagedProcessFunctionPointer<UnmanagedPointer, UnmanagedPointer>? thiscallTestReturnStruct;
+        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer, TestContext>? thiscallTestStructAsArgument;
+        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer, TestContext, TestContext, TestContext>? thiscallTestStructsAsArguments;
+        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer, UnmanagedPointer>? thiscallTestStructPtrAsArgument;
+        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer, UnmanagedPointer, UnmanagedPointer, UnmanagedPointer>? thiscallTestStructPtrsAsArguments;
 
         public ThisCallTests(Process in_process, SymbolResolver in_sr) : base(in_process)
         {
-            _this = new UnmanagedPointer<TestContext>(Process, new(1, 2, 3));
+            _this = new UnmanagedPointer(Process, new TestContext(1, 2, 3));
 
             thiscallTestNoArguments = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("testContext::thiscallTestNoArguments")), ECallingConvention.ThisCall);
             thiscallTestSumOfFields = new(Process, Process.ToASLR(in_sr.GetProcedureAddress("testContext::thiscallTestSumOfFields")), ECallingConvention.ThisCall);
@@ -58,10 +58,10 @@ namespace ProcessExtensions.Tests.x86
 
         public bool thiscallTestReturnStruct_ShouldReturnCorrectStruct()
         {
-            var in_ctx = new UnmanagedPointer<TestContext>(Process, new());
+            var in_ctx = new UnmanagedPointer(Process, new TestContext());
             var out_ctx = thiscallTestReturnStruct!.Invoke(_this!, in_ctx);
 
-            var result = new TestContext(1, 2, 3).Equals(out_ctx.Get(Process));
+            var result = new TestContext(1, 2, 3).Equals(out_ctx.Get<TestContext>(Process));
 
             in_ctx.Free(Process);
 

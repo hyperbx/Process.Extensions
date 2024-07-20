@@ -9,7 +9,7 @@ namespace ProcessExtensions.Interop.Generic
     /// <param name="in_process">The target process to write to.</param>
     /// <param name="in_data">The object to write.</param>
     [MarshalAsRegister]
-    public struct UnmanagedPointer<T>(Process in_process, T in_data) where T : unmanaged
+    public struct UnmanagedPointer(Process in_process, object in_data)
     {
         public nint pData = in_process.Write(in_data);
 
@@ -27,7 +27,7 @@ namespace ProcessExtensions.Interop.Generic
         /// </summary>
         /// <typeparam name="T">The unmanaged type to get.</typeparam>
         /// <param name="in_process">The target process this pointer pertains to.</param>
-        public T Get(Process in_process)
+        public T Get<T>(Process in_process) where T : unmanaged
         {
             if (!IsValid())
                 return default;
@@ -41,7 +41,7 @@ namespace ProcessExtensions.Interop.Generic
         /// <typeparam name="T">The unmanaged type to set.</typeparam>
         /// <param name="in_process">The target process this pointer pertains to.</param>
         /// <param name="in_data">The value to write.</param>
-        public void Set(Process in_process, T in_data)
+        public void Set<T>(Process in_process, T in_data) where T : unmanaged
         {
             if (!IsValid())
                 return;
@@ -58,7 +58,7 @@ namespace ProcessExtensions.Interop.Generic
             in_process.Free(pData);
         }
 
-        public static implicit operator bool(UnmanagedPointer<T> in_this)
+        public static implicit operator bool(UnmanagedPointer in_this)
         {
             return in_this.IsValid();
         }

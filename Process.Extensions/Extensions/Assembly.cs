@@ -1,6 +1,7 @@
 ﻿using Gee.External.Capstone.X86;
 using Keystone;
 using ProcessExtensions.Enums;
+using ProcessExtensions.Extensions;
 using ProcessExtensions.Helpers.Internal;
 using ProcessExtensions.Logger;
 using System.Diagnostics;
@@ -464,7 +465,7 @@ namespace ProcessExtensions
                 return ERegister.XMM0;
 
             var size = typeof(T).Name.Contains("UnmanagedPointer")
-                ? in_process.Is64Bit() ? 8 : 4
+                ? in_process.GetPointerSize()
                 : Marshal.SizeOf<T>();
 
             return in_process.GetRegisterBySize(EBaseRegister.RAX, size);

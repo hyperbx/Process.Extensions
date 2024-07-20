@@ -12,12 +12,12 @@ namespace ProcessExtensions.Tests.Shared
     {
         private UnmanagedProcessFunctionPointer<byte>? fastcallTestNoArguments;
         private UnmanagedProcessFunctionPointer<int, int, int, int>? fastcallTestSumOfArguments;
-        private UnmanagedProcessFunctionPointer<UnmanagedPointer<TestContext>, UnmanagedPointer<TestContext>>? fastcallTestReturnStruct;
-        private UnmanagedProcessFunctionPointer<UnmanagedPointer<TestContext>>? fastcallTestReturnStructPtr;
+        private UnmanagedProcessFunctionPointer<UnmanagedPointer, UnmanagedPointer>? fastcallTestReturnStruct;
+        private UnmanagedProcessFunctionPointer<UnmanagedPointer>? fastcallTestReturnStructPtr;
         private UnmanagedProcessFunctionPointer<int, TestContext>? fastcallTestStructAsArgument;
         private UnmanagedProcessFunctionPointer<int, TestContext, TestContext, TestContext, TestContext, TestContext, TestContext>? fastcallTestStructsAsArguments;
-        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer<TestContext>>? fastcallTestStructPtrAsArgument;
-        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer<TestContext>, UnmanagedPointer<TestContext>, UnmanagedPointer<TestContext>>? fastcallTestStructPtrsAsArguments;
+        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer>? fastcallTestStructPtrAsArgument;
+        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer, UnmanagedPointer, UnmanagedPointer>? fastcallTestStructPtrsAsArguments;
 
         public FastCallTests(Process in_process, SymbolResolver in_sr) : base(in_process)
         {
@@ -43,10 +43,10 @@ namespace ProcessExtensions.Tests.Shared
 
         public bool fastcallTestReturnStruct_ShouldReturnCorrectStruct()
         {
-            var in_ctx = new UnmanagedPointer<TestContext>(Process, new(1, 2, 3));
+            var in_ctx = new UnmanagedPointer(Process, new TestContext(1, 2, 3));
             var out_ctx = fastcallTestReturnStruct!.Invoke(in_ctx);
 
-            var result = new TestContext(1, 2, 3).Equals(out_ctx.Get(Process));
+            var result = new TestContext(1, 2, 3).Equals(out_ctx.Get<TestContext>(Process));
 
             in_ctx.Free(Process);
 
@@ -57,12 +57,12 @@ namespace ProcessExtensions.Tests.Shared
         {
             var ctx = fastcallTestReturnStructPtr!.Invoke();
 
-            return new TestContext(1, 2, 3).Equals(ctx.Get(Process));
+            return new TestContext(1, 2, 3).Equals(ctx.Get<TestContext>(Process));
         }
 
         public bool fastcallTestStructAsArgument_ShouldReturnCorrectSum()
         {
-            return fastcallTestStructAsArgument!.Invoke(new(1, 2, 3)) == 6;
+            return fastcallTestStructAsArgument!.Invoke(new TestContext(1, 2, 3)) == 6;
         }
 
         public bool fastcallTestStructsAsArguments_ShouldReturnCorrectSum()
@@ -103,7 +103,7 @@ namespace ProcessExtensions.Tests.Shared
 
         public bool fastcallTestStructPtrAsArgument_ShouldReturnCorrectSum()
         {
-            var ctx = new UnmanagedPointer<TestContext>(Process, new(1, 2, 3));
+            var ctx = new UnmanagedPointer(Process, new TestContext(1, 2, 3));
             var result = fastcallTestStructPtrAsArgument!.Invoke(ctx) == 6;
 
             ctx.Free(Process);
@@ -113,7 +113,7 @@ namespace ProcessExtensions.Tests.Shared
 
         public bool fastcallTestStructPtrsAsArguments_ShouldReturnCorrectSum()
         {
-            var ctx = new UnmanagedPointer<TestContext>(Process, new(1, 2, 3));
+            var ctx = new UnmanagedPointer(Process, new TestContext(1, 2, 3));
             var result = fastcallTestStructPtrsAsArguments!.Invoke(ctx, ctx, ctx) == 18;
 
             ctx.Free(Process);

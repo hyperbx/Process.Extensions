@@ -32,9 +32,9 @@ namespace ProcessExtensions.Interop.Context
 
                 /* Replace non-primitive types with a pointer to
                    themselves in the target process' memory. */
-                if (argType.Equals(typeof(UnmanagedPointer)))
+                if (argType.Equals(typeof(UnmanagedPointer<>)))
                 {
-                    in_args[i] = ((UnmanagedPointer)arg).pData;
+                    in_args[i] = ((UnmanagedPointer<nint>)arg).pData;
                 }
                 else if (argType.Equals(typeof(UnmanagedString)))
                 {

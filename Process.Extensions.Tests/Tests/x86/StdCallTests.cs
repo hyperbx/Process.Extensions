@@ -11,12 +11,12 @@ namespace ProcessExtensions.Tests.x86
     {
         private UnmanagedProcessFunctionPointer<byte>? stdcallTestNoArguments;
         private UnmanagedProcessFunctionPointer<int, int, int, int>? stdcallTestSumOfArguments;
-        private UnmanagedProcessFunctionPointer<UnmanagedPointer, UnmanagedPointer>? stdcallTestReturnStruct;
-        private UnmanagedProcessFunctionPointer<UnmanagedPointer>? stdcallTestReturnStructPtr;
+        private UnmanagedProcessFunctionPointer<UnmanagedPointer<TestContext>, UnmanagedPointer<TestContext>>? stdcallTestReturnStruct;
+        private UnmanagedProcessFunctionPointer<UnmanagedPointer<TestContext>>? stdcallTestReturnStructPtr;
         private UnmanagedProcessFunctionPointer<int, TestContext>? stdcallTestStructAsArgument;
         private UnmanagedProcessFunctionPointer<int, TestContext, TestContext, TestContext>? stdcallTestStructsAsArguments;
-        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer>? stdcallTestStructPtrAsArgument;
-        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer, UnmanagedPointer, UnmanagedPointer>? stdcallTestStructPtrsAsArguments;
+        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer<TestContext>>? stdcallTestStructPtrAsArgument;
+        private UnmanagedProcessFunctionPointer<int, UnmanagedPointer<TestContext>, UnmanagedPointer<TestContext>, UnmanagedPointer<TestContext>>? stdcallTestStructPtrsAsArguments;
 
         public StdCallTests(Process in_process, SymbolResolver in_sr) : base(in_process)
         {
@@ -42,10 +42,10 @@ namespace ProcessExtensions.Tests.x86
 
         public bool stdcallTestReturnStruct_ShouldReturnCorrectStruct()
         {
-            var in_ctx = new UnmanagedPointer(Process, new TestContext(1, 2, 3));
+            var in_ctx = new UnmanagedPointer<TestContext>(Process, new(1, 2, 3));
             var out_ctx = stdcallTestReturnStruct!.Invoke(in_ctx);
 
-            var result = new TestContext(1, 2, 3).Equals(out_ctx.Get<TestContext>(Process));
+            var result = new TestContext(1, 2, 3).Equals(out_ctx.Get(Process));
 
             in_ctx.Free(Process);
 
@@ -56,7 +56,7 @@ namespace ProcessExtensions.Tests.x86
         {
             var ctx = stdcallTestReturnStructPtr!.Invoke();
 
-            return new TestContext(1, 2, 3).Equals(ctx.Get<TestContext>(Process));
+            return new TestContext(1, 2, 3).Equals(ctx.Get(Process));
         }
 
         public bool stdcallTestStructAsArgument_ShouldReturnCorrectSum()
@@ -71,7 +71,7 @@ namespace ProcessExtensions.Tests.x86
 
         public bool stdcallTestStructPtrAsArgument_ShouldReturnCorrectSum()
         {
-            var ctx = new UnmanagedPointer(Process, new TestContext(1, 2, 3));
+            var ctx = new UnmanagedPointer<TestContext>(Process, new(1, 2, 3));
             var result = stdcallTestStructPtrAsArgument!.Invoke(ctx) == 6;
 
             ctx.Free(Process);
@@ -81,7 +81,7 @@ namespace ProcessExtensions.Tests.x86
 
         public bool stdcallTestStructPtrsAsArguments_ShouldReturnCorrectSum()
         {
-            var ctx = new UnmanagedPointer(Process, new TestContext(1, 2, 3));
+            var ctx = new UnmanagedPointer<TestContext>(Process, new(1, 2, 3));
             var result = stdcallTestStructPtrsAsArguments!.Invoke(ctx, ctx, ctx) == 18;
 
             ctx.Free(Process);

@@ -301,6 +301,8 @@ namespace ProcessExtensions
 
             in_process.RestoreMemory(in_address);
             in_process.Free(out_hookAddr);
+
+            _hooks.Remove(in_address);
         }
 
         /// <summary>

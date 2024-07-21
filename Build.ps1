@@ -42,7 +42,7 @@ foreach ($dependency in $dependencies)
     if (![System.IO.File]::Exists($resolved))
     {
         echo "Failed to locate build dependency: ${dependency}"
-        exit
+        exit -1
     }
 }
 
@@ -51,7 +51,7 @@ if (!(Get-Command -Name dotnet -ErrorAction SilentlyContinue))
 {
     echo ".NET SDK is required to build Process.Extensions."
     echo "You can install the required .NET SDK for Windows from here: https://dotnet.microsoft.com/en-us/download/dotnet/8.0"
-    exit
+    exit -1
 }
 
 $vs      = & "${vswhere}" -nologo -latest -prerelease -property installationPath
@@ -61,7 +61,7 @@ if (![System.IO.File]::Exists($msbuild))
 {
     echo "Failed to locate MSBuild."
     echo "Ensure that you have Visual Studio installed with the ""Desktop development with C++"" workload."
-    exit
+    exit -1
 }
 
 function PatchVersionInformation([String]$commitID, [Boolean]$useFullCommitID, [String]$version)
@@ -125,7 +125,7 @@ if (![System.IO.File]::Exists($testProgram))
 {
     echo "Failed to locate test program..."
     echo "It may have failed to build and cannot be tested."
-    exit
+    exit -1
 }
 
 $process = Start-Process -FilePath "${testProgram}" -WorkingDirectory "${testProgramDir}" -NoNewWindow -PassThru -Wait

@@ -295,6 +295,31 @@ namespace ProcessExtensions
         }
 
         /// <summary>
+        /// Attempts to create a mid-ASM hook for injecting custom code.
+        /// <para>A hook will write a <b>jmp</b>/<b>call</b> instruction at the specified address to the provided assembly code.</para>
+        /// <para>This instruction takes up <b>5</b> bytes in x86 and <b>14</b> bytes in x86-64.</para>
+        /// <para>The instructions that are overwritten by the <b>jmp</b>/<b>call</b> instruction will not be copied over to the hook, please rewrite these manually.</para>
+        /// </summary>
+        /// <param name="in_process">The target process to inject into.</param>
+        /// <param name="in_code">The x86-64 assembly code to assemble.</param>
+        /// <param name="in_address">The address to start the hook from.</param>
+        /// <param name="in_parameter">The method used to start the hook.</param>
+        /// <param name="in_isPreserved">Determines whether the original code will be preserved so it can be restored using <see cref="MemoryPreserver.RestoreMemory(Process, nint, bool)"/> later.</param>
+        /// <returns><c>true</c> if the hook was written successfully; otherwise, <c>false</c>.</returns>
+        public static bool TryWriteAsmHook(this Process in_process, string in_code, nint in_address, EHookParameter in_parameter = EHookParameter.Jump, bool in_isPreserved = true)
+        {
+            try
+            {
+                in_process.WriteAsmHook(in_code, in_address, in_parameter, in_isPreserved);
+                return true;
+            }
+            catch
+            {
+                return false;                
+            }
+        }
+
+        /// <summary>
         /// Removes a mid-ASM hook.
         /// </summary>
         /// <param name="in_process">The target process the hook is in.</param>

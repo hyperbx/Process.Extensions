@@ -12,6 +12,7 @@ namespace ProcessExtensions
 {
     public static class Memory
     {
+        private static int _staticAllocationsProcessID = 0;
         private static Dictionary<string, nint> _staticAllocations = [];
 
         /// <summary>
@@ -75,6 +76,11 @@ namespace ProcessExtensions
         /// <exception cref="VerboseWin32Exception"/>
         public static nint Alloc(this Process in_process, string in_name, int in_size)
         {
+            if (_staticAllocationsProcessID != in_process.Id)
+                _staticAllocations.Clear();
+
+            _staticAllocationsProcessID = in_process.Id;
+
             if (in_process.HasExited)
                 return 0;
 

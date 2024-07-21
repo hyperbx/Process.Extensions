@@ -230,7 +230,8 @@ namespace ProcessExtensions
                 var asmPtr = in_process.WriteBytes(buffer.Buffer);
                 var asmEnd = asmPtr + buffer.Buffer.Length;
 
-                _hooks.TryAdd(in_address, asmPtr);
+                if (!_hooks.TryAdd(in_address, asmPtr))
+                    throw new AccessViolationException("Cannot write a mid-ASM hook where one is already installed.");
 #if DEBUG
                 LoggerService.Utility($"Written mid-ASM hook code at 0x{asmPtr:X}.");
 #endif

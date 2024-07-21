@@ -398,7 +398,5 @@ FodyWeavers.xsd
 *.sln.iml
 
 # Process.Extensions.Tests
-!Process.Extensions/Dependencies/x64
-!Process.Extensions/Dependencies/x86
 !Process.Extensions.Tests/Tests/x64
 !Process.Extensions.Tests/Tests/x86

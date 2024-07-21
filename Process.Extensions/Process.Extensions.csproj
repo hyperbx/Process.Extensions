@@ -20,8 +20,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Dependencies\x64\keystone.dll" Pack="True" PackagePath="\lib\$(TargetFramework)\x64\" />
-    <Content Include="Dependencies\x86\keystone.dll" Pack="True" PackagePath="\lib\$(TargetFramework)\x86\" />
     <Content Include="Resources\Icons\Icon.ico" />
     <Content Include="Resources\Icons\Icon.png" Pack="True" PackagePath="\" />
   </ItemGroup>
@@ -33,10 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Resources\Icons\Icon.png">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
+    <None Update="Resources\Icons\Icon.png" Pack="True" PackagePath="\" />
   </ItemGroup>
 
   <Import Project="..\Process.Extensions.Shared\Process.Extensions.Shared.projitems" Label="Shared" />

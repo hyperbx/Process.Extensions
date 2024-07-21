@@ -23,7 +23,7 @@ namespace ProcessExtensions.Tests.Shared
 
             LoggerService.Warning("Waiting for process to exit...");
 
-            Thread.Sleep(500);
+            Thread.Sleep(2000);
 
             return Process.HasExited;
         }

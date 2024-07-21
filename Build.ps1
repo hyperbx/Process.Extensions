@@ -94,6 +94,11 @@ function CheckMSBuildExitCode([String]$path, [Int32]$exitCode)
 
 foreach ($csprojPath in $csprojPaths)
 {
+    if (!$Test -and $csprojPath.Contains("Test"))
+    {
+        continue
+    }
+
     if ($Clean)
     {
         dotnet clean "${csprojPath}"
@@ -115,6 +120,11 @@ foreach ($csprojPath in $csprojPaths)
 
 foreach ($vcxprojPath in $vcxprojPaths)
 {
+    if (!$Test)
+    {
+        continue
+    }
+
     if ($Clean)
     {
         & "${msbuild}" "${vcxprojPath}" /t:Clean
@@ -147,8 +157,6 @@ if (![System.IO.File]::Exists($testProgram))
 }
 
 $testProcess = Start-Process -FilePath "${testProgram}" -WorkingDirectory "${testProgramDir}" -NoNewWindow -PassThru -Wait
-
-echo ""
 
 if ($testProcess.ExitCode -ne 0)
 {

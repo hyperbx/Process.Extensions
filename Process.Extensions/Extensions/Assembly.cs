@@ -208,6 +208,10 @@ namespace ProcessExtensions
                         break;
                 }
 
+                // Remove existing mid-ASM hook from this location.
+                if (_hooks.TryGetValue(in_address, out _))
+                    in_process.RemoveAsmHook(in_address);
+
                 if (in_isPreserved)
                     in_process.PreserveMemory(in_address, hookLength);
 
@@ -226,7 +230,7 @@ namespace ProcessExtensions
                 var asmPtr = in_process.WriteBytes(buffer.Buffer);
                 var asmEnd = asmPtr + buffer.Buffer.Length;
 
-                _hooks.Add(in_address, asmPtr);
+                _hooks.TryAdd(in_address, asmPtr);
 #if DEBUG
                 LoggerService.Utility($"Written mid-ASM hook code at 0x{asmPtr:X}.");
 #endif

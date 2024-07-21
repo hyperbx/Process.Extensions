@@ -80,6 +80,18 @@ function PatchVersionInformation([String]$commitID, [Boolean]$useFullCommitID, [
     }
 }
 
+function CheckMSBuildExitCode([String]$path, [Int32]$exitCode)
+{
+    if ($exitCode -eq 0)
+    {
+        return
+    }
+    
+    echo "Failed to build project (${exitCode}): ${path}"
+
+    exit $exitCode
+}
+
 foreach ($csprojPath in $csprojPaths)
 {
     if ($Clean)
@@ -92,10 +104,13 @@ foreach ($csprojPath in $csprojPaths)
     PatchVersionInformation $CommitID $UseFullCommitID $Version
 
     dotnet build "${csprojPath}" /p:Configuration="${Configuration}"
-    echo ""
+
+    $exitCode = $LASTEXITCODE
 
     # Restore default version number.
     PatchVersionInformation "" $false "1.0.0"
+
+    CheckMSBuildExitCode $csprojPath $exitCode
 }
 
 foreach ($vcxprojPath in $vcxprojPaths)
@@ -108,8 +123,11 @@ foreach ($vcxprojPath in $vcxprojPaths)
     
     # Build test projects for both platforms to run tests native and on WoW64.
     & "${msbuild}" "${vcxprojPath}" /p:Configuration="${Configuration}" /p:Platform="Win32"
+    CheckMSBuildExitCode $csprojPath $LASTEXITCODE
     echo ""
+
     & "${msbuild}" "${vcxprojPath}" /p:Configuration="${Configuration}" /p:Platform="x64"
+    CheckMSBuildExitCode $csprojPath $LASTEXITCODE
     echo ""
 }
 
@@ -128,16 +146,13 @@ if (![System.IO.File]::Exists($testProgram))
     exit -1
 }
 
-$process = Start-Process -FilePath "${testProgram}" -WorkingDirectory "${testProgramDir}" -NoNewWindow -PassThru -Wait
-$exitCode = $process.ExitCode
+$testProcess = Start-Process -FilePath "${testProgram}" -WorkingDirectory "${testProgramDir}" -NoNewWindow -PassThru -Wait
 
 echo ""
 
-if ($exitCode -eq 0)
+if ($testProcess.ExitCode -ne 0)
 {
-    echo "Tests completed successfully."
-    exit 0
+    exit $testProcess.ExitCode
 }
 
-echo "Tests failed with exit code: ${exitCode}"
-exit $exitCode
+exit 0

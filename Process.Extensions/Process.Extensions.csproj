@@ -20,17 +20,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Resources\Icons\Icon.ico"/>
-    <Content Include="Resources\Icons\Icon.png">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </Content>
+    <Content Include="Dependencies\x64\keystone.dll" Pack="True" PackagePath="\lib\$(TargetFramework)\x64\" />
+    <Content Include="Dependencies\x86\keystone.dll" Pack="True" PackagePath="\lib\$(TargetFramework)\x86\" />
+    <Content Include="Resources\Icons\Icon.ico" />
+    <Content Include="Resources\Icons\Icon.png" Pack="True" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gee.External.Capstone" Version="2.3.0"/>
-    <PackageReference Include="keystoneengine.csharp" Version="0.9.1.1"/>
-    <PackageReference Include="Vanara.PInvoke.Kernel32" Version="4.0.*"/>
+    <PackageReference Include="Gee.External.Capstone" Version="2.3.0" />
+    <PackageReference Include="keystoneengine.csharp" Version="0.9.1.1" />
+    <PackageReference Include="Vanara.PInvoke.Kernel32" Version="4.0.*" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,6 +39,10 @@
     </None>
   </ItemGroup>
 
-  <Import Project="..\Process.Extensions.Shared\Process.Extensions.Shared.projitems" Label="Shared"/>
+  <Import Project="..\Process.Extensions.Shared\Process.Extensions.Shared.projitems" Label="Shared" />
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy /Y &quot;$(TargetDir)x64\keystone.dll&quot; &quot;$(ProjectDir)Dependencies\x64\keystone.dll&quot;&#xD;&#xA;copy /Y &quot;$(TargetDir)x86\keystone.dll&quot; &quot;$(ProjectDir)Dependencies\x86\keystone.dll&quot;" />
+  </Target>
 
 </Project>

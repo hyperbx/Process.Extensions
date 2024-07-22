@@ -4,6 +4,7 @@ namespace ProcessExtensions
 {
     public static class MemoryPreserver
     {
+        private static int _preservedMemoryProcessID = 0;
         private static Dictionary<nint, byte[]> _preservedMemory = [];
 
         /// <summary>
@@ -15,6 +16,11 @@ namespace ProcessExtensions
         /// <param name="in_isPreservedOnce">Determines whether the memory should be preserved once (meaning further calls to preserve memory at <paramref name="in_address"/> will be ignored).</param>
         public static void PreserveMemory(this Process in_process, nint in_address, int in_length, bool in_isPreservedOnce = true)
         {
+            if (_preservedMemoryProcessID != in_process.Id)
+                _preservedMemory.Clear();
+
+            _preservedMemoryProcessID = in_process.Id;
+
             if (in_process.HasExited || in_address == 0)
                 return;
 

@@ -11,6 +11,7 @@ namespace ProcessExtensions
 {
     public static class Assembly
     {
+        private static int _hooksProcessID = 0;
         private static Dictionary<nint, nint> _hooks = [];
 
         /// <summary>
@@ -186,6 +187,11 @@ namespace ProcessExtensions
         /// <param name="in_isPreserved">Determines whether the original code will be preserved so it can be restored using <see cref="MemoryPreserver.RestoreMemory(Process, nint, bool)"/> later.</param>
         public static void WriteAsmHook(this Process in_process, string in_code, nint in_address, EHookParameter in_parameter = EHookParameter.Jump, bool in_isPreserved = true)
         {
+            if (_hooksProcessID != in_process.Id)
+                _hooks.Clear();
+
+            _hooksProcessID = in_process.Id;
+
             if (in_process.HasExited || string.IsNullOrEmpty(in_code) || in_address == 0)
                 return;
 

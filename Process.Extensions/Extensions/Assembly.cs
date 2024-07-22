@@ -25,7 +25,9 @@ namespace ProcessExtensions
             if (in_process.HasExited)
                 return [];
 
-            in_code = RemoveComments(in_code);
+            // Remove comments from code blocks (ignore for single lines).
+            if (in_code.Contains('\n') || in_code.Contains('\r'))
+                in_code = RemoveComments(in_code);
 
             using (var assembler = new Engine(Keystone.Architecture.X86, in_process.Is64Bit() ? Mode.X64 : Mode.X32) { ThrowOnError = true })
                 return assembler.Assemble(in_code, (ulong)in_address).Buffer;

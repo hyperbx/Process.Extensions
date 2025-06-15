@@ -1,6 +1,6 @@
 #include "testContext.h"
 
-testContext m_stdcallTestStruct;
+testContext g_stdcallTestStruct;
 
 static bool __stdcall stdcallTestNoArguments()
 {
@@ -21,9 +21,9 @@ static testContext __stdcall stdcallTestReturnStruct()
 
 static testContext* __stdcall stdcallTestReturnStructPtr()
 {
-    m_stdcallTestStruct = testContext(1, 2, 3);
+    g_stdcallTestStruct = testContext(1, 2, 3);
 
-    return &m_stdcallTestStruct;
+    return &g_stdcallTestStruct;
 }
 
 static int __stdcall stdcallTestStructAsArgument(testContext in_ctx)

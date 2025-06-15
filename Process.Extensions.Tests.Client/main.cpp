@@ -8,11 +8,11 @@
 #include "tests\stdcallTests.h"
 #include "tests\thiscallTests.h"
 
-bool m_isRunning = true;
+bool g_isRunning = true;
 
 static void signalExit()
 {
-    m_isRunning = false;
+    g_isRunning = false;
 }
 
 static void runAllTests()
@@ -25,7 +25,7 @@ static void runAllTests()
 
 static void linkAll()
 {
-    if (!m_isRunning)
+    if (!g_isRunning)
         return;
 
     signalExit();
@@ -35,7 +35,7 @@ static void linkAll()
 
 int main()
 {
-    while (m_isRunning)
+    while (g_isRunning)
     {
         if (GetAsyncKeyState(VK_F1) & 0x8000)
             runAllTests();

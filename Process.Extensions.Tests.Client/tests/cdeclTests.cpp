@@ -1,6 +1,6 @@
 #include "testContext.h"
 
-testContext m_cdeclTestStruct;
+testContext g_cdeclTestStruct;
 
 static bool __cdecl cdeclTestNoArguments()
 {
@@ -21,9 +21,9 @@ static testContext __cdecl cdeclTestReturnStruct()
 
 static testContext* __cdecl cdeclTestReturnStructPtr()
 {
-    m_cdeclTestStruct = testContext(1, 2, 3);
+    g_cdeclTestStruct = testContext(1, 2, 3);
 
-    return &m_cdeclTestStruct;
+    return &g_cdeclTestStruct;
 }
 
 static int __cdecl cdeclTestStructAsArgument(testContext in_ctx)

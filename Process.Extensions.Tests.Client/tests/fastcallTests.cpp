@@ -1,6 +1,6 @@
 #include "testContext.h"
 
-testContext m_fastcallTestStruct;
+testContext g_fastcallTestStruct;
 
 static bool __fastcall fastcallTestNoArguments()
 {
@@ -21,9 +21,9 @@ static testContext __fastcall fastcallTestReturnStruct()
 
 static testContext* __fastcall fastcallTestReturnStructPtr()
 {
-    m_fastcallTestStruct = testContext(1, 2, 3);
+    g_fastcallTestStruct = testContext(1, 2, 3);
 
-    return &m_fastcallTestStruct;
+    return &g_fastcallTestStruct;
 }
 
 static int __fastcall fastcallTestStructAsArgument(testContext in_ctx)
